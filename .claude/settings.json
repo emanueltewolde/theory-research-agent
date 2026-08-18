@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "autoMemoryEnabled": false,
+  "disableAllHooks": false,
+  "enableAllProjectMcpServers": false,
+  "env": {
+    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
+    "RESEARCH_AGENT_ADAPTER_SCHEMA": "research-agent-adapter-v1"
+  },
+  "permissions": {
+    "defaultMode": "default",
+    "deny": [
+      "Bash(git)",
+      "Bash(git *)",
+      "Bash(/usr/bin/git *)",
+      "Bash(/usr/local/bin/git *)",
+      "Bash(/opt/homebrew/bin/git *)",
+      "Bash(git.exe *)",
+      "PowerShell(git)",
+      "PowerShell(git *)",
+      "PowerShell(git.exe)",
+      "PowerShell(git.exe *)",
+      "PowerShell(/usr/bin/git)",
+      "PowerShell(/usr/bin/git *)",
+      "PowerShell(/usr/local/bin/git)",
+      "PowerShell(/usr/local/bin/git *)",
+      "PowerShell(/opt/homebrew/bin/git)",
+      "PowerShell(/opt/homebrew/bin/git *)",
+      "Bash(claude --worktree *)",
+      "Bash(claude -w *)",
+      "Bash(codex --worktree *)",
+      "Bash(codex -w *)",
+      "PowerShell(claude --worktree *)",
+      "PowerShell(claude -w *)",
+      "PowerShell(codex --worktree *)",
+      "PowerShell(codex -w *)",
+      "EnterWorktree",
+      "Agent(isolation:worktree)",
+      "Read(/.git/**)",
+      "Edit(/.git/**)",
+      "Edit(/.agents/**)",
+      "Edit(/.claude/**)",
+      "Edit(/.codex/**)",
+      "Edit(/runtime/**)",
+      "Edit(/tools/guards/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|Monitor|Edit|Write|NotebookEdit|EnterWorktree",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/guards/no_git.py\" --hook claude",
+            "timeout": 10,
+            "statusMessage": "Enforcing no-Git research policy"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/guards/no_worktree.py\" --hook claude",
+            "timeout": 10,
+            "statusMessage": "Rejecting Git worktree isolation"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/guards/protect_evidence.py\" --hook claude",
+            "timeout": 10,
+            "statusMessage": "Protecting write-once research evidence"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/guards/protect_runtime.py\" --hook claude",
+            "timeout": 10,
+            "statusMessage": "Protecting runtime safety configuration"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Glob|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/guards/no_git.py\" --hook claude",
+            "timeout": 10,
+            "statusMessage": "Enforcing no-Git metadata policy"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/guards/no_worktree.py\" --hook claude",
+            "timeout": 10,
+            "statusMessage": "Rejecting Git worktree isolation"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+# Adapter schema: research-agent-adapter-v1
+name = "substantive"
+description = "Default focused high-reasoning role for proof attempts, counterexample searches, experiment design, literature synthesis, and ordinary verification."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Pursue the exact bounded research question and successful outcomes in the task packet. A proof, a valid counterexample, or a sharply localized obstruction can all be successful. Preserve assumptions, quantifiers, scope, exceptional cases, evidence class, and negative findings. Never invoke Git or request a worktree. Write only to the assigned task directory and preallocated artifact paths. Do not edit control records, shared indexes, the portfolio, inbox, runtime policy, or manuscript; return an integration-ready handoff to the coordinator.
+"""
+
+[[hooks.PreToolUse]]
+matcher = "^(apply_patch|Bash|Edit|Write)$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "python3 tools/guards/protect_shared.py --role substantive --hook codex"
+command_windows = "py -3 tools\\guards\\protect_shared.py --role substantive --hook codex"
+timeout = 10
+statusMessage = "Protecting integration-owned records"

@@ -1,0 +1,19 @@
+# Adapter schema: research-agent-adapter-v1
+name = "deep"
+description = "Extra-high focused role for subtle central claims, difficult verification, or a task that defeated a serious substantive attempt."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "xhigh"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Work only on the bounded high-leverage question and supplied authoritative packet. Treat proof, counterexample, impossibility, narrowing, and a precise obstruction as legitimate outcomes. Audit assumptions, quantifiers, scope, and exceptional cases. Never invoke Git or request a worktree. Write only to assigned paths and hand off exact claims and negative results. If the runtime reports a model or effort substitution, stop before treating the task as complete and return a visible runtime-failure receipt; do not silently downgrade deep work.
+"""
+
+[[hooks.PreToolUse]]
+matcher = "^(apply_patch|Bash|Edit|Write)$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "python3 tools/guards/protect_shared.py --role deep --hook codex"
+command_windows = "py -3 tools\\guards\\protect_shared.py --role deep --hook codex"
+timeout = 10
+statusMessage = "Protecting integration-owned records"

@@ -1,0 +1,30 @@
+# Adapter schema: research-agent-adapter-v1
+# Native exec-policy defense in depth. The PreToolUse guard also covers shell
+# wrappers, compound strings, Git metadata access, and uncommon executable paths.
+
+prefix_rule(
+    pattern = ["git"],
+    decision = "forbidden",
+    justification = "Research agents never operate version control; use artifacts and leave Git to the human.",
+    match = [
+        "git",
+        "git status",
+        "git diff --stat",
+        "git commit -m checkpoint",
+    ],
+    not_match = [
+        "python3 tools/research.py check",
+    ],
+)
+
+prefix_rule(
+    pattern = [["/usr/bin/git", "/usr/local/bin/git", "/opt/homebrew/bin/git", "git.exe"]],
+    decision = "forbidden",
+    justification = "Path-qualified Git is also prohibited for research agents.",
+    match = [
+        "/usr/bin/git status",
+        "/usr/local/bin/git diff",
+        "/opt/homebrew/bin/git log -1",
+        "git.exe status",
+    ],
+)

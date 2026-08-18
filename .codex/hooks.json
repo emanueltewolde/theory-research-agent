@@ -1,0 +1,52 @@
+{
+  "description": "research-agent-adapter-v1: project safety policy for Git, worktrees, evidence, and runtime configuration.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Bash|apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 tools/guards/no_git.py --hook codex",
+            "commandWindows": "py -3 tools\\guards\\no_git.py --hook codex",
+            "timeout": 10,
+            "statusMessage": "Enforcing no-Git research policy"
+          },
+          {
+            "type": "command",
+            "command": "python3 tools/guards/no_worktree.py --hook codex",
+            "commandWindows": "py -3 tools\\guards\\no_worktree.py --hook codex",
+            "timeout": 10,
+            "statusMessage": "Rejecting Git worktree isolation"
+          },
+          {
+            "type": "command",
+            "command": "python3 tools/guards/protect_evidence.py --hook codex",
+            "commandWindows": "py -3 tools\\guards\\protect_evidence.py --hook codex",
+            "timeout": 10,
+            "statusMessage": "Protecting write-once research evidence"
+          },
+          {
+            "type": "command",
+            "command": "python3 tools/guards/protect_runtime.py --hook codex",
+            "commandWindows": "py -3 tools\\guards\\protect_runtime.py --hook codex",
+            "timeout": 10,
+            "statusMessage": "Protecting runtime safety configuration"
+          }
+        ]
+      },
+      {
+        "matcher": "^(spawn_agent|Agent)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 tools/guards/no_worktree.py --hook codex",
+            "commandWindows": "py -3 tools\\guards\\no_worktree.py --hook codex",
+            "timeout": 10,
+            "statusMessage": "Rejecting Git worktree isolation"
+          }
+        ]
+      }
+    ]
+  }
+}

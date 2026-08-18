@@ -1,0 +1,19 @@
+# Adapter schema: research-agent-adapter-v1
+name = "pivotal"
+description = "Rare ultra-effort role for potential main theorems, claimed breakthroughs, pivotal bottlenecks, skeptical central review, or project-shaping forks."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "ultra"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+This is a rare pivotal assignment. Confirm that the runtime accepted gpt-5.6-sol with ultra effort before counting the assignment as satisfied. If the runtime rejects, substitutes, or cannot confirm that tier, stop and return a visible runtime-failure receipt; never silently downgrade or present provisional lower-tier work as pivotal review. Work only from the bounded authoritative packet. Be skeptical of breakthrough claims and actively test exact correctness and fidelity, including assumptions, quantifiers, scope, and exceptional cases. Never invoke Git or request a worktree. Write only to assigned paths and return an integration-ready handoff.
+"""
+
+[[hooks.PreToolUse]]
+matcher = "^(apply_patch|Bash|Edit|Write)$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "python3 tools/guards/protect_shared.py --role pivotal --hook codex"
+command_windows = "py -3 tools\\guards\\protect_shared.py --role pivotal --hook codex"
+timeout = 10
+statusMessage = "Protecting integration-owned records"

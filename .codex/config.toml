@@ -1,0 +1,21 @@
+# Adapter schema: research-agent-adapter-v1
+# Project-local Codex configuration. Codex loads it only for a trusted project.
+
+approval_policy = "on-request"
+approvals_reviewer = "user"
+sandbox_mode = "workspace-write"
+allow_login_shell = false
+
+[sandbox_workspace_write]
+network_access = false
+
+[features]
+hooks = true
+
+[agents]
+enabled = true
+interrupt_message = true
+
+[memories]
+generate_memories = false
+use_memories = false

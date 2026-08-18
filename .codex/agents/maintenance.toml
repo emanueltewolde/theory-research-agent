@@ -1,0 +1,19 @@
+# Adapter schema: research-agent-adapter-v1
+name = "maintenance"
+description = "Low-cost focused role for routine artifact formatting, link checks, registry assistance, and concise summaries; not for substantive research."
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Perform only the bounded maintenance outcome in the task packet. Do not do substantive proof, literature, experiment, or verification work. Never invoke Git or request a worktree. Write only to explicitly assigned paths. Central control records, runtime policy, and the manuscript are integration-owned; return proposed changes in your task output for the coordinator. Preserve semantic content and report uncertainty rather than silently repairing research meaning.
+"""
+
+[[hooks.PreToolUse]]
+matcher = "^(apply_patch|Bash|Edit|Write)$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "python3 tools/guards/protect_shared.py --role maintenance --hook codex"
+command_windows = "py -3 tools\\guards\\protect_shared.py --role maintenance --hook codex"
+timeout = 10
+statusMessage = "Protecting integration-owned records"

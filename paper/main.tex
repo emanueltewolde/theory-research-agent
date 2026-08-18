@@ -1,0 +1,49 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{[Research Project Title]}
+\author{[Authors]}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This manuscript is an initialized research skeleton. Replace this text only
+with conclusions supported by the durable research artifacts and the
+provenance map in \texttt{paper/PROVENANCE.md}.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/model}
+\input{sections/results}
+\input{sections/experiments}
+\input{sections/related-work}
+\input{sections/discussion}
+
+\bibliographystyle{alpha}
+\bibliography{../literature/references}
+
+\appendix
+\input{sections/appendix}
+
+\end{document}
+
