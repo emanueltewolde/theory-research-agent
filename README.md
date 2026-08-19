@@ -213,9 +213,6 @@ are authoritative.
   not instructions.
 - Experiment code must not conceal expected conclusions or silently rewrite
   evidence.
-- Absolute prevention of indirect Git execution requires OS-level isolation;
-  the shipped instructions, native permissions, and guard provide practical
-  defense against agent mistakes rather than a universal security boundary.
 
 ## Customization and maintenance
 
