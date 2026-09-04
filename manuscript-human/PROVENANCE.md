@@ -1,9 +1,10 @@
-# Manuscript Provenance
+# Human Manuscript Provenance
 
-Every established theorem, lemma, proposition, figure, and table in the
-manuscript must appear below with links to its exact claim, evidence, and
-passing review. Open conjectures must be labeled `open` and may not support an
-established conclusion.
+This map covers the polished manuscript in `manuscript-human/`. Every
+established theorem, lemma, proposition, figure, and table in that manuscript
+must appear below with links to its exact claim, evidence, and passing review.
+Open conjectures must be labeled `open` and may not support an established
+conclusion.
 
 ## Established manuscript items
 

@@ -64,7 +64,8 @@ Portfolio and inbox items use the same labels under a level-two item heading bec
 | Source meaning and translation into project terminology | The relevant literature record |
 | Chronological session history | The relevant run record |
 | Human navigation | `OVERVIEW.md` and milestone reports |
-| Expository presentation | The paper, linked through its provenance map |
+| Continuously maintained research exposition | `manuscript-ai/`, linked through its provenance map |
+| Human-directed venue exposition | `manuscript-human/`, linked through its separate provenance map |
 
 ## Operational controlled values
 
@@ -135,11 +136,11 @@ Claim kind is one of:
 
 Evidence class describes what actually supports the claim, such as `mathematical proof`, `mathematical counterexample`, `exhaustive computation over stated domain`, `empirical experiment`, or `literature source`. Do not use a stronger class than the evidence warrants.
 
-`Required review profile` is `substantive`, `deep`, or `pivotal`. It defaults
-to `substantive`; the integrator raises it when a claim is subtle, central, a
-potential breakthrough, or project-shaping. Validation requires a current,
-fresh, completed passing review at that profile. An unavailable high tier
-leaves review pending rather than silently lowering this field.
+`Required review profile` is `substantive`, `deep`, or `pivotal`, selected from
+the difficulty, centrality, and consequence of verifying the claim. Validation
+requires a current, fresh, completed passing review at the recorded profile.
+An unavailable high tier leaves review pending rather than silently lowering
+this field.
 
 Status lifecycle:
 
@@ -223,17 +224,17 @@ A review verdict is `pass`, `fail`, `narrower-than-stated`, or `inconclusive`. I
 
 The verifier writes only the review and its assigned task output. It cannot edit the target claim. `pass` requires both evidence correctness and exact claim fidelity. A narrower valid result becomes a revised or new candidate claim and receives a fresh review.
 
-An established manuscript theorem requires at least one passing independent review of its current digest at its recorded required profile. A pivotal claim also requires skeptical review using the configured pivotal profile.
+An established manuscript theorem requires at least one passing independent review of its current digest at its recorded required profile.
 
 A validated claim's `Independent reviews` table links the passing review at
-its canonical path. If the paper provenance map cites the claim, the claim's
+its canonical path. If either manuscript provenance map cites the claim, the claim's
 `Manuscript locations` section links back to that provenance location; these
-two-way navigation links must agree with the authoritative review and paper
+two-way navigation links must agree with the authoritative review and manuscript
 records.
 
 ## Literature records
 
-[`literature/references.bib`](../literature/references.bib) is the canonical bibliography. A literature note records its BibTeX key, stable locator, precise theorem/page/section location, source assumptions, careful project-facing paraphrase, translation between source and project terminology, transferable techniques, relationships, contradictions, and limitations.
+[`literature/references.bib`](../literature/references.bib) is the canonical research bibliography. The self-contained human manuscript copies only its needed, checked entries into `manuscript-human/` while preserving keys and metadata. A literature note records its BibTeX key, stable locator, precise theorem/page/section location, source assumptions, careful project-facing paraphrase, translation between source and project terminology, transferable techniques, relationships, contradictions, and limitations.
 
 A consequential search record adds search locations, exact queries, search dates, selection logic, coverage limits, and unresolved gaps. Allocate it with `python3 tools/research.py new literature --search`; ordinary `new literature` creates a source note. Neither record should claim exhaustive coverage unless the recorded protocol warrants it.
 
@@ -263,7 +264,7 @@ Important findings must be promoted to claims, attempts, experiments, or literat
 
 [`OVERVIEW.md`](../OVERVIEW.md) is a mutable navigation page. A report begins as `draft` and becomes an immutable milestone snapshot when its status changes to `published`. A correction creates a new report whose `Supersedes` link names the prior snapshot; the prior report remains unchanged and `published`.
 
-The paper provenance map associates every established theorem, lemma, figure, and table label with claim, evidence, and review links. A claim that becomes rejected, refuted, superseded, or stale makes the linked manuscript location stale until repaired. Open conjectures may appear only when visibly labeled and cannot support established conclusions.
+Each manuscript has its own provenance map associating every established theorem, lemma, figure, and table label with claim, evidence, and review links. A claim that becomes rejected, refuted, superseded, or stale makes every linked manuscript location stale until repaired. Open conjectures may appear only when visibly labeled and cannot support established conclusions.
 
 ## Link and placeholder conventions
 

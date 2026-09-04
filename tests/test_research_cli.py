@@ -245,11 +245,11 @@ class ProjectFixture(unittest.TestCase):
         }
         for heading, body in finalized_sections.items():
             text = re.sub(rf"(?ms)^## {re.escape(heading)}\s*\n.*?(?=^## |\Z)", f"## {heading}\n\n{body}\n\n", text, count=1)
-        text = text.replace(
-            "- **Revision 1:** 2026-08-17 — Initial draft.",
+        text = re.sub(
+            r"(?m)^- \*\*Revision 1:\*\* \d{4}-\d{2}-\d{2} — Initial draft\.$",
             "- **Revision 1:** 2026-08-17 — Initial claim statement.\n"
             "- **Evidence revision 1:** 2026-08-17 — Initial proof and dependency packet.",
-            1,
+            text, count=1,
         )
         claim_path.write_text(text, encoding="utf-8")
         self.set_registry_status(claim_id, "under review")
@@ -415,6 +415,7 @@ class CoreCLITests(ProjectFixture):
     def test_blank_scaffold_is_valid(self) -> None:
         report = research.check_project(self.root)
         self.assertEqual([], report.errors, [item.render(self.root) for item in report.errors])
+        self.assertIn("human-manuscript-template-pending", diagnostic_codes(report))
 
     def test_nested_or_local_runtime_instruction_overrides_are_visible(self) -> None:
         nested = self.root / "research/AGENTS.md"
@@ -1326,7 +1327,7 @@ class CoreCLITests(ProjectFixture):
         self.assertIn("invalid-index", diagnostic_codes(research.check_project(self.root)))
 
         index.write_text(original)
-        provenance = self.root / "paper/PROVENANCE.md"
+        provenance = self.root / "manuscript-ai/PROVENANCE.md"
         provenance.write_text(
             provenance.read_text()
             + "\n## Stale items requiring revision\n\n| LaTeX label | Reason stale | Former source | Required action |\n|---|---|---|---|\n"
@@ -1336,28 +1337,70 @@ class CoreCLITests(ProjectFixture):
             diagnostic_codes(research.check_project(self.root)),
         )
 
-    def test_paper_input_cannot_escape_the_paper_tree(self) -> None:
-        main = self.root / "paper/main.tex"
+    def test_manuscript_input_cannot_escape_its_tree(self) -> None:
+        main = self.root / "manuscript-ai/main.tex"
         main.write_text(main.read_text() + "\n\\input{../../outside-secret}\n")
-        self.assertIn("paper-input-escape", diagnostic_codes(research.check_project(self.root)))
+        self.assertIn("manuscript-input-escape", diagnostic_codes(research.check_project(self.root)))
         main.write_text(main.read_text() + "\n\\input ../../unbraced-secret.tex\n")
-        self.assertIn("paper-input-escape", diagnostic_codes(research.check_project(self.root)))
+        self.assertIn("manuscript-input-escape", diagnostic_codes(research.check_project(self.root)))
+
+    def test_installed_human_template_requires_main_entry_point(self) -> None:
+        sample = self.root / "manuscript-human/conference-template.tex"
+        sample.write_text("\\documentclass{article}\n\\begin{document}Template\\end{document}\n")
+        self.assertIn(
+            "human-manuscript-main-missing",
+            diagnostic_codes(research.check_project(self.root)),
+        )
+
+    def test_unused_venue_sample_tex_is_not_treated_as_manuscript_content(self) -> None:
+        main = self.root / "manuscript-human/main.tex"
+        main.write_text("\\documentclass{article}\n\\begin{document}Paper\\end{document}\n")
+        sample = self.root / "manuscript-human/sample-from-venue.tex"
+        sample.write_text(
+            "\\begin{theorem}Example only.\\label{thm:venue-sample}\\end{theorem}\n"
+        )
+        codes = diagnostic_codes(research.check_project(self.root))
+        self.assertNotIn("unprovenanced-manuscript-item", codes)
+        self.assertNotIn("thm:venue-sample", research._tex_labels(self.root, "manuscript-human"))
+
+    def test_human_manuscript_is_self_contained_and_citations_resolve(self) -> None:
+        main = self.root / "manuscript-human/main.tex"
+        main.write_text(
+            "\\documentclass{article}\n"
+            "\\begin{document}\\cite{missing-key}\\end{document}\n"
+            "\\bibliography{../literature/references}\n"
+        )
+        codes = diagnostic_codes(research.check_project(self.root))
+        self.assertIn("human-bibliography-escape", codes)
+        self.assertIn("human-citation-key-missing", codes)
+
+        main.write_text(
+            "\\documentclass{article}\n"
+            "\\begin{document}\\cite{local-key}\\end{document}\n"
+            "\\bibliography{references}\n"
+        )
+        bibliography = self.root / "manuscript-human/references.bib"
+        bibliography.write_text("@article{local-key, title={Local source}}\n")
+        codes = diagnostic_codes(research.check_project(self.root))
+        self.assertNotIn("human-bibliography-escape", codes)
+        self.assertNotIn("human-bibliography-missing", codes)
+        self.assertNotIn("human-citation-key-missing", codes)
 
     def test_unrelated_tex_commands_are_not_misparsed_as_input(self) -> None:
-        main = self.root / "paper/main.tex"
+        main = self.root / "manuscript-ai/main.tex"
         main.write_text(
             main.read_text()
             + "\n\\includegraphics{../../outside-figure.png}\n"
             + "\\inputencoding{utf8}\n"
         )
         codes = diagnostic_codes(research.check_project(self.root))
-        self.assertNotIn("paper-input-escape", codes)
-        self.assertNotIn("paper-input-missing", codes)
+        self.assertNotIn("manuscript-input-escape", codes)
+        self.assertNotIn("manuscript-input-missing", codes)
 
     def test_commented_tex_claims_and_inputs_are_ignored_but_escaped_percent_is_content(self) -> None:
-        main = self.root / "paper/main.tex"
+        main = self.root / "manuscript-ai/main.tex"
         main.write_text(main.read_text() + "\n% \\input{../../commented-outside}\n")
-        results = self.root / "paper/sections/results.tex"
+        results = self.root / "manuscript-ai/sections/results.tex"
         results.write_text(
             "% \\begin{theorem}\n"
             "% \\label{thm:commented}\n"
@@ -1366,7 +1409,7 @@ class CoreCLITests(ProjectFixture):
         )
         report = research.check_project(self.root)
         codes = diagnostic_codes(report)
-        self.assertNotIn("paper-input-escape", codes)
+        self.assertNotIn("manuscript-input-escape", codes)
         self.assertNotIn("unprovenanced-manuscript-item", codes)
         self.assertNotIn("thm:commented", research._tex_labels(self.root))
 
@@ -1785,16 +1828,16 @@ class EpistemicGateTests(ProjectFixture):
 
     def test_paper_requires_current_passing_review_and_provenance(self) -> None:
         claim_id, claim_path, review_id, review_path = self.make_validated_claim()
-        results = self.root / "paper/sections/results.tex"
+        results = self.root / "manuscript-ai/sections/results.tex"
         results.write_text("\\begin{theorem}\\label{thm:main} Result.\\end{theorem}\n")
         claim_file = self.root / claim_path
         claim_text = re.sub(
             r"(?ms)^## Manuscript locations\s*\n.*?(?=^## |\Z)",
-            "## Manuscript locations\n\n- `thm:main` in [results.tex](../../paper/sections/results.tex).\n\n",
+            "## Manuscript locations\n\n- `thm:main` in [results.tex](../../manuscript-ai/sections/results.tex).\n\n",
             claim_file.read_text(), count=1,
         )
         claim_file.write_text(claim_text)
-        provenance = self.root / "paper/PROVENANCE.md"
+        provenance = self.root / "manuscript-ai/PROVENANCE.md"
         text = provenance.read_text()
         row = (
             f"| `thm:main` | theorem | [{claim_id}](../{claim_path.as_posix()}) | "
@@ -1856,11 +1899,11 @@ class EpistemicGateTests(ProjectFixture):
     def test_conjecture_requires_labeled_open_provenance_and_limitation(self) -> None:
         self.accept_contract()
         claim_id, claim_relative = research.create_artifact(self.root, "claim", "Open conjecture source")
-        results = self.root / "paper/sections/results.tex"
+        results = self.root / "manuscript-ai/sections/results.tex"
         results.write_text(
             "\\begin{conjecture}\\label{conj:boundary} Boundary claim.\\end{conjecture}\n"
         )
-        provenance = self.root / "paper/PROVENANCE.md"
+        provenance = self.root / "manuscript-ai/PROVENANCE.md"
         marker = "|---|---|---|---|---|"
         row = (
             f"| `conj:boundary` | conjecture | [{claim_id}](../{claim_relative.as_posix()}) | "
@@ -1885,7 +1928,7 @@ class EpistemicGateTests(ProjectFixture):
         self.assertIn("unlabeled-manuscript-item", diagnostic_codes(research.check_project(self.root)))
 
     def test_unprovenanced_theorem_is_rejected(self) -> None:
-        results = self.root / "paper/sections/results.tex"
+        results = self.root / "manuscript-ai/sections/results.tex"
         results.write_text(
             "\\begin{theorem}\\label{thm:orphan} Result.\\end{theorem}\n"
             "\\begin{lemma}\\label{thm:orphan} Duplicate.\\end{lemma}\n"

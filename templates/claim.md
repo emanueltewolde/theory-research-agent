@@ -14,7 +14,7 @@
 - **Related artifacts:** none
 - **Supersedes:** none
 
-<!-- Statement/assumptions and the supporting evidence packet have separate revision+digest bindings once review begins. The evidence packet includes dependencies, evidence, proof/derivation, claim kind, evidence class, project relationship, and limitations. Raise Required review profile to deep or pivotal when consequence and centrality warrant it; never lower it merely to satisfy an unavailable runtime. See docs/ARTIFACTS.md before changing these fields. -->
+<!-- Statement/assumptions and the supporting evidence packet have separate revision+digest bindings once review begins. The evidence packet includes dependencies, evidence, proof/derivation, claim kind, evidence class, project relationship, and limitations. Set Required review profile according to docs/ARTIFACTS.md and never lower it merely to satisfy an unavailable runtime. -->
 
 ## Exact statement
 

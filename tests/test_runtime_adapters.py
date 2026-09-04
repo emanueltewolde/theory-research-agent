@@ -304,7 +304,8 @@ class ProtectedSharedRecordGuardTests(unittest.TestCase):
     def test_focused_writes_to_integration_owned_records_are_blocked(self) -> None:
         blocked = (
             {"tool_name": "Write", "tool_input": {"file_path": "STATE.md"}},
-            {"tool_name": "Edit", "tool_input": {"file_path": "paper/main.tex"}},
+            {"tool_name": "Edit", "tool_input": {"file_path": "manuscript-ai/main.tex"}},
+            {"tool_name": "Edit", "tool_input": {"file_path": "manuscript-human/main.tex"}},
             {"tool_name": "Write", "tool_input": {"path": ".codex/config.toml"}},
             {
                 "tool_name": "apply_patch",

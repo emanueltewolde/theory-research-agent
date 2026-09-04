@@ -14,7 +14,7 @@ Tasks request one of five stable profiles:
 | `coordinator` | Broad-context work selection, integration, triage, and strategy |
 | `substantive` | Default proof attempts, counterexample searches, experiment design, literature synthesis, and ordinary verification |
 | `deep` | Subtle central claims, difficult verification, or work that defeated a serious substantive attempt |
-| `pivotal` | Rare central bottlenecks, potential main theorems, claimed breakthroughs, skeptical central review, and project-shaping forks |
+| `pivotal` | Important central bottlenecks, potential main theorems, claimed breakthroughs, and project-shaping forks |
 
 The profile describes required capability, not a role or a reasoning procedure. The broad-context process selects it using difficulty, leverage, uncertainty, consequence, and previous failure.
 
@@ -71,7 +71,7 @@ Independent verification must use a fresh context that receives:
 - explicit dependencies and evidence;
 - a neutral request to test correctness and claim fidelity.
 
-Do not provide the producer’s private conversation history, a desired verdict, or instructions to repair the proof while reviewing it. If native subagents cannot provide a fresh context, write a task packet for a separate runtime session.
+Do not provide the producer’s private conversation history, a desired verdict, or instructions to repair the proof while reviewing it. Proof and verifier subagents may come from the same top-level session: launch a distinct verifier context with a neutral packet and explicitly request aggressive falsification. If native subagents cannot provide that separation, write a task packet for another runtime session.
 
 ## Write boundaries
 
@@ -81,14 +81,14 @@ Normal boundaries are:
 
 | Context | May update | Must not update |
 |---|---|---|
-| Integration authority | Shared current state, portfolio, indexes, overview, and serialized manuscript, subject to human contract authority | Raw completed evidence; contract intent without approval |
-| Focused research | Its unique task directory and explicitly preallocated artifacts | Shared control records, other tasks, manuscript, raw evidence |
+| Integration authority | Shared current state, portfolio, indexes, overview, and `manuscript-ai/`, subject to human contract authority | Raw completed evidence; contract intent without approval; `manuscript-human/` without a current explicit writing request |
+| Focused research | Its unique task directory and explicitly preallocated artifacts | Shared control records, other tasks, both manuscripts, raw evidence |
 | Independent verifier | Its review and task output | Target claim or producer evidence |
-| Paper synthesis | Assigned manuscript/provenance locations under serialized integration | Claims or reviews to make exposition appear supported |
+| Human-directed writing session | Specifically authorized `manuscript-human/` locations and its provenance map | Unapproved manuscript areas; claims, reviews, control records, Git, or Overleaf synchronization |
 
 ## No-Git invariant
 
-Research agents must not run any Git command, including read-only status, diff, log, or history operations. They must not initialize repositories, create branches, commit, manipulate worktrees, inspect `.git`, or use provider features that do so. Humans or trusted external automation own version control.
+Research agents must not run any Git command, including read-only status, diff, log, or history operations. They must not initialize repositories, create branches, commit, manipulate worktrees, inspect `.git`, or use provider features that do so. They also do not push or pull Overleaf. Humans or trusted external automation own version control and manuscript synchronization.
 
 Adapters should enforce this in layers:
 

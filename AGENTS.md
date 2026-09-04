@@ -33,31 +33,40 @@ choose decomposition and detailed reasoning methods according to the task.
 
 ## Verification and manuscript
 
-- Important claims require independent review in a fresh critical context.
+- Important claims require independent review in a fresh, explicitly
+  skeptical context. A verifier subagent may be launched from the same
+  top-level session as the proof subagent; independence requires a distinct
+  verifier context and neutral evidence packet, not a different parent chat.
 - Meet the claim's recorded required review profile; do not lower a `deep` or
   `pivotal` requirement merely because that tier is unavailable.
 - Bind a review to the exact claim and evidence revisions and both digests. Check both
   logical/evidential correctness and fidelity to the stated assumptions,
   quantifiers, scope, exceptional cases, and project question.
 - A verifier writes the review and does not repair the target claim in place.
-- Only sufficiently validated findings enter the paper as established. Keep
-  `paper/PROVENANCE.md` synchronized with theorem, lemma, figure, and table
-  labels. Mark manuscript content stale when its source claim is rejected or
-  superseded.
+- Only sufficiently validated findings enter either manuscript as established.
+  Keep each manuscript's `PROVENANCE.md` synchronized with theorem, lemma,
+  figure, and table labels. Mark manuscript content stale when its source
+  claim is rejected or superseded.
 
 ## Responsibilities and change boundaries
 
 - Broad-context integration, focused research, independent verification, and
   paper synthesis are responsibilities, not mandatory permanent agents.
 - One integrating context at a time updates `STATE.md`, `PROJECT.md`,
-  `ARTIFACT_INDEX.md`, the shared portfolio/inbox, `OVERVIEW.md`, and the
-  manuscript.
+  `ARTIFACT_INDEX.md`, the shared portfolio/inbox, `OVERVIEW.md`, and
+  `manuscript-ai/`.
+- `manuscript-human/` is human-directed. Do not load it during ordinary
+  research or edit it unless the current user request explicitly authorizes
+  the particular writing work. For authorized writing, load
+  `docs/MANUSCRIPT_WRITING.md`.
 - Focused contexts write only their assigned task directory or explicitly
   preallocated artifact paths. They do not update shared control records.
 - Verifiers do not edit target claims. Completed experiment executions and
   raw source data are read-only or append-only.
-- Native subagents are optional. If unavailable, create a bounded task packet
-  for a separate session. Verification still needs a genuinely fresh context.
+- Native subagents are optional. Proof and verifier subagents may be siblings
+  under one coordinating session; give the verifier an isolated packet, no
+  expected verdict, and a strongly critical mandate. If a fresh subcontext is
+  unavailable, use a bounded task packet in a separate session.
 
 ## Effort allocation
 
@@ -69,8 +78,9 @@ Use semantic profiles from `runtime/PROFILES.md`:
   design, literature synthesis, and ordinary verification;
 - `deep` for subtle central claims, difficult verification, or work that
   defeated a serious substantive attempt;
-- `pivotal` rarely for main-theorem bottlenecks, claimed breakthroughs,
-  skeptical central review, or project-changing strategic forks.
+- `pivotal` for important theorem bottlenecks, claimed breakthroughs, or
+  project-changing strategic forks. Choose review effort from the difficulty
+  and consequence of verifying the claim, not from the prover's profile.
 
 Record requested and resolved model/effort in the task receipt. Never silently
 downgrade `deep` or `pivotal`; lower-tier work may be labeled provisional while
@@ -106,6 +116,8 @@ been reached. Use qualitative trajectory judgment, not fixed attempt counts.
 
 - Never run any Git command, including read-only commands. Do not inspect or
   modify `.git`, use worktrees, or invoke Git indirectly through scripts.
+- Never push, pull, or otherwise synchronize Overleaf. The human or trusted
+  external automation owns manuscript synchronization.
 - Version control belongs to the human or trusted external automation.
 - Do not install dependencies, access secrets, make external writes, perform
   destructive actions, or materially expand scope without approval.

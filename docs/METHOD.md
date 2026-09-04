@@ -13,7 +13,7 @@ The method is runtime-neutral. Provider chat history, memory, and native subagen
 5. **Negative knowledge is durable.** Failed approaches, counterexamples, rejected claims, and closed directions remain indexed and explain when reconsideration would make sense.
 6. **Important claims receive fresh review.** A review binds to the exact claim and evidence revisions and both statement/evidence digests, checks correctness, and separately checks claim fidelity.
 7. **Evidence stays honest.** Literature and experiments retain provenance. Empirical or computational support is never silently presented as a mathematical proof.
-8. **Parallel work has bounded writes.** One integration authority updates shared control records and the manuscript. Focused work writes only to its task directory and explicitly assigned artifacts.
+8. **Parallel work has bounded writes.** One integration authority updates shared control records and `manuscript-ai/`. Focused work writes only to its task directory and explicitly assigned artifacts; `manuscript-human/` changes require a separately authorized writing session.
 9. **The runtime is replaceable.** Research tasks request semantic effort profiles; provider-specific model names and invocation syntax belong in adapters.
 10. **Research agents do not use Git.** Humans or trusted external automation own version control. Epistemic corrections are still recorded through status, supersession, and revision links.
 
@@ -26,7 +26,7 @@ The workspace deliberately separates four kinds of information.
 | Control | Current intent and action selection | [`PROJECT.md`](../PROJECT.md), [`STATE.md`](../STATE.md), [`ARTIFACT_INDEX.md`](../ARTIFACT_INDEX.md), [`DIRECTIONS.md`](../research/DIRECTIONS.md), [`INBOX.md`](../research/INBOX.md) |
 | Durable knowledge | Exact results and evidence | Claims, attempts, reviews, literature notes, and experiments |
 | History | What happened in each substantial session | [`runs/`](../runs/) |
-| Synthesis | Curated communication, not operational truth | [`OVERVIEW.md`](../OVERVIEW.md), [`reports/`](../reports/), and the paper |
+| Synthesis | Curated communication, not operational truth | [`OVERVIEW.md`](../OVERVIEW.md), [`reports/`](../reports/), [`manuscript-ai/`](../manuscript-ai/), and [`manuscript-human/`](../manuscript-human/) |
 
 When information appears in more than one layer, one location is authoritative and every other occurrence must be a short linked description. See [`ARTIFACTS.md`](ARTIFACTS.md) for the source-of-truth table.
 
@@ -37,9 +37,10 @@ The method distinguishes responsibilities without requiring permanent agent role
 - **Broad-context integration** understands the project as a whole, selects valuable work, allocates effort, triages findings, and updates shared records.
 - **Focused research** tackles a bounded proof, counterexample, experiment, literature synthesis, or other difficult question using only relevant context.
 - **Independent verification** examines an exact claim and evidence packet in a fresh critical context. It does not edit the target claim.
-- **Paper synthesis** turns validated results into coherent exposition under serialized integration.
+- **AI-draft synthesis** continuously turns validated results into useful, unpolished exposition under serialized integration.
+- **Human-directed manuscript writing** turns validated work into polished venue exposition under the boundary in [`MANUSCRIPT_WRITING.md`](MANUSCRIPT_WRITING.md).
 
-One context may perform several responsibilities sequentially. Focused delegation is optional. Independent verification must nevertheless be fresh: when native delegation is unavailable, prepare a task packet for a separate session.
+One context may perform several responsibilities sequentially. Focused delegation is optional. A proof subagent and its verifier may be launched by the same coordinating session, provided the verifier gets a distinct, neutral context and an explicitly skeptical mandate. When no fresh subcontext is available, prepare a task packet for a separate session.
 
 ## Human initialization
 
@@ -95,7 +96,7 @@ runs/RUN-0007/tasks/T01/
 runs/RUN-0007/tasks/T02/
 ```
 
-Each task directory contains `TASK.md`, `OUTPUT.md`, and `RECEIPT.md`. A focused context may also write a preallocated attempt, experiment, or literature artifact if the packet explicitly grants that path. It must not update `PROJECT.md`, `STATE.md`, shared indexes, the direction portfolio, the overview, completed raw evidence, another task, or the manuscript.
+Each task directory contains `TASK.md`, `OUTPUT.md`, and `RECEIPT.md`. A focused context may also write a preallocated attempt, experiment, or literature artifact if the packet explicitly grants that path. It must not update `PROJECT.md`, `STATE.md`, shared indexes, the direction portfolio, the overview, completed raw evidence, another task, or either manuscript.
 
 ## Integration and clean close
 
@@ -107,7 +108,7 @@ The integration authority reconciles focused outputs rather than copying them un
 4. Triage deferred ideas and alignment questions.
 5. Update direction assessments and revival conditions.
 6. Create fresh verification tasks for important candidates.
-7. Promote material into the paper only through the validation gate.
+7. Promote material into `manuscript-ai/` only through the validation gate.
 8. Complete the run handoff and task receipts.
 9. Update the artifact index, portfolio, and human overview when triggered.
 10. Update `STATE.md` last, advancing its revision and naming the integrated run.
@@ -128,8 +129,8 @@ Every substantial run handoff must record:
 The runtime's final response to the human mirrors this handoff concisely:
 strongest result, informative failure or uncertainty, consequential questions,
 and recommended next action. When an overview trigger fires, it also links the
-refreshed overview, immutable milestone report, and latest paper PDF when the
-local LaTeX environment produced one (otherwise the paper source and build
+refreshed overview, immutable milestone report, and latest relevant manuscript PDF when the
+local LaTeX environment produced one (otherwise the manuscript source and build
 blocker).
 
 ## Claim and verification discipline
@@ -144,11 +145,11 @@ A review answers two questions independently:
 A correct proof of a narrower statement does not pass the broader claim. Create or revise a candidate claim, recompute its digest, and review it afresh. A valid counterexample or impossibility result is a successful resolution when it answers the assigned question.
 
 The integrating context records each candidate's required semantic review
-profile. Ordinary important claims default to `substantive`; subtle central
-claims may require `deep`, and claimed breakthroughs or project-shaping claims
-require `pivotal`. The requirement is part of the claim rather than an
-unstated memory, so unavailable capability remains visible as verification
-debt.
+profile. Ordinary important claims default to `substantive`; subtle or
+difficult reviews may require `deep`, while unusually complex or consequential
+central claims may require `pivotal`. The requirement is part of the claim
+rather than an unstated memory, so unavailable capability remains visible as
+verification debt.
 
 ## Evidence discipline
 
@@ -179,7 +180,7 @@ An accepted contract change must:
 
 1. increment the contract revision;
 2. record the explicit human decision;
-3. identify affected claims, experiments, directions, and manuscript locations;
+3. identify affected claims, experiments, directions, and locations in both manuscripts;
 4. mark anything requiring revalidation.
 
 ## Strategic and trajectory review
@@ -195,11 +196,17 @@ At every run close, check whether the qualitative trigger stored in `STATE.md` h
 
 Assess goal composition, sunk-cost behavior, direction balance, verification debt, missing theorem links, literature gaps, and whether the manuscript reflects the actual strongest contribution. Update the portfolio, next action, and next qualitative trigger. Do not introduce fixed attempt thresholds or numerical direction rankings.
 
-## Human overview and paper synthesis
+## Human overview and manuscript synthesis
 
 [`OVERVIEW.md`](../OVERVIEW.md) is a concise, non-authoritative navigation page. Refresh it by the cadence in the project contract—initially every two to three substantial runs—and immediately after a major theorem, counterexample, central failed review, strategic pivot, or dangerous alignment question. A milestone may also receive an immutable report in [`reports/`](../reports/).
 
-The manuscript contains mature definitions, theorem statements, derivations, counterexamples, empirical findings, related literature, limitations, and supported conclusions. Established theorem-like content requires a validated claim and a passing independent review. Manuscript labels link back to their evidence and reviews through the paper provenance map. Open conjectures must be visibly labeled and cannot support established conclusions.
+`manuscript-ai/` is the integration-maintained research draft;
+`manuscript-human/` is the human-directed venue manuscript. Setup and writing
+instructions live in [`MANUSCRIPT_WRITING.md`](MANUSCRIPT_WRITING.md) and the
+human manuscript's README. Both maintain provenance maps. Established
+theorem-like content requires a validated claim and a passing independent
+review; open conjectures must be visibly labeled and cannot support
+established conclusions.
 
 ## Short illustrative snippets
 

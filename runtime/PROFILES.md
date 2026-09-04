@@ -23,7 +23,7 @@ permissions actually resolved on the installed runtime.
 | `coordinator` | Broad-context selection, integration, triage, and strategy | `gpt-5.6-sol`, `high` | `opus`, `high` |
 | `substantive` | Default proof attempts, counterexample search, experimental design, literature synthesis, and ordinary verification | `gpt-5.6-sol`, `high` | `opus`, `high` |
 | `deep` | Subtle central claims, difficult verification, or work following a serious failed substantive attempt | `gpt-5.6-sol`, `xhigh` | `opus`, `xhigh` |
-| `pivotal` | Rare main-theorem bottlenecks, claimed breakthroughs, skeptical central review, or project-shaping forks | `gpt-5.6-sol`, `ultra` | `opus`, `max` |
+| `pivotal` | Important main-theorem bottlenecks, claimed breakthroughs, skeptical central review, or project-shaping forks | `gpt-5.6-sol`, `ultra` | `opus`, `max` |
 
 ## Adapter mapping history
 
@@ -49,7 +49,10 @@ receipts and reviews remain auditable without artifact migration.
 `verifier`, `verifier_deep`, and `verifier_pivotal` are fresh-context
 responsibility definitions mapped to `substantive`, `deep`, and `pivotal`,
 respectively. Each installs the verifier write boundary, so stronger review
-never gains permission to rewrite the target claim.
+never gains permission to rewrite the target claim. Select verifier effort
+independently: a pivotal producer does not automatically require a pivotal
+verifier, which is reserved for unusually complex or consequential central
+claims.
 
 The names describe intended research effort, not identical computation across
 providers. Codex's current local-agent documentation exposes `ultra` when the
@@ -79,15 +82,16 @@ persistent top-level `effortLevel` setting.
 
 - The `coordinator` is the only adapter role permitted to integrate
   `PROJECT.md`, `STATE.md`, `ARTIFACT_INDEX.md`, `OVERVIEW.md`, the direction
-  portfolio, the inbox, or the manuscript. Consequential contract edits still
-  require an explicit human decision.
+  portfolio, the inbox, or `manuscript-ai/`. `manuscript-human/` follows its
+  separate human-directed boundary. Consequential contract edits still require
+  an explicit human decision.
 - Focused agents write only their assigned run/task directory and explicitly
   preallocated artifact paths. Provider hooks mechanically protect central
   records, and their instructions require a handoff to the coordinator.
 - A verifier writes its assigned review/output only and never edits the target
   claim. Verification must use a fresh context packet rather than the
   producer's conversational reasoning.
-- No role invokes Git or requests worktree isolation.
+- No role invokes Git, requests worktree isolation, or synchronizes Overleaf.
 
 ## Changing mappings
 

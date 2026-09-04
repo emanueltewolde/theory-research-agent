@@ -39,7 +39,12 @@ boundaries while leaving decomposition and detailed reasoning to the models.
    an agent, is authoritative for consequential choices.
 4. Inspect and, if needed, edit the replaceable model mappings in
    [`runtime/PROFILES.md`](runtime/PROFILES.md).
-5. Validate the workspace and selected runtime:
+5. If an agent will work on the polished paper, first copy the official
+   conference or journal TeX template into
+   [`manuscript-human/`](manuscript-human/README.md), expose its entry point as
+   `main.tex`, and verify that the untouched template compiles. This is not
+   required to begin research or maintain the AI draft.
+6. Validate the workspace and selected runtime:
 
    ```sh
    python3 tools/research.py check
@@ -47,14 +52,14 @@ boundaries while leaving decomposition and detailed reasoning to the models.
    # or: python3 tools/research.py doctor --runtime claude
    ```
 
-6. Start Codex or Claude Code in the project root and say:
+7. Start Codex or Claude Code in the project root and say:
 
    > Continue the research.
 
-7. Review the run handoff after each substantial session. Every two or three
+8. Review the run handoff after each substantial session. Every two or three
    substantial runs—or sooner at a milestone—review [`OVERVIEW.md`](OVERVIEW.md)
    and the current manuscript.
-8. If you use version control, perform checkpoints yourself or through trusted
+9. If you use version control, perform checkpoints yourself or through trusted
    external automation. Research agents in this workspace must not run Git.
 
 The initializer never installs dependencies, initializes version control,
@@ -83,7 +88,7 @@ The workspace separates four kinds of information:
 | Control | Human intent, present state, portfolio, and ID registry | `PROJECT.md`, `STATE.md`, `ARTIFACT_INDEX.md`, `research/DIRECTIONS.md`, `research/INBOX.md` |
 | Durable knowledge | Claims, attempts, verification, literature, and experiments | `research/`, `literature/`, `experiments/` |
 | History | Concise chronological handoffs and task receipts | `runs/` |
-| Synthesis | Human navigation and paper-quality exposition | `OVERVIEW.md`, `reports/`, `paper/` |
+| Synthesis | Human navigation, the living research draft, and human-directed venue exposition | `OVERVIEW.md`, `reports/`, `manuscript-ai/`, `manuscript-human/` |
 
 Detailed schemas and status vocabularies are in
 [`docs/ARTIFACTS.md`](docs/ARTIFACTS.md). The end-to-end lifecycle is in
@@ -127,7 +132,7 @@ failed proof attempt.
 
 One integrating context promotes supported conclusions, preserves negative
 results, triages deferred items, updates the direction portfolio, requests
-verification, and curates validated work into the paper. It completes the run
+verification, and curates validated work into `manuscript-ai/`. It completes the run
 handoff and updates `STATE.md` last. That final state update is the integration
 marker used by the next session.
 
@@ -170,7 +175,7 @@ active run in `STATE.md`.
 `check` validates structure and epistemic links without contacting a model or
 the network. `doctor` additionally checks static runtime adapter and safety
 wiring, runs guard canaries, reports a locally available runtime version, and
-can build the paper in a temporary mirror. Confirm in the runtime's hook/status
+can build installed manuscripts in temporary mirrors. Confirm in the runtime's hook/status
 inspector that project configuration is trusted and active. `adapters --check` detects drift between
 semantic profiles and native adapter files; without `--check`, `adapters`
 synchronizes only the native agents' model and effort fields. Run adapter
@@ -178,14 +183,15 @@ mutation from a human/trusted shell; the in-runtime safety hook deliberately
 prevents an agent from weakening its own configuration. None of these commands
 invokes Git.
 
-## Paper workflow
+## Two-manuscript workflow
 
-The source in [`paper/main.tex`](paper/main.tex) is an editable research draft,
-not an end-of-project export. Mature definitions, validated theorems,
-counterexamples, reproducible empirical findings, and supported limitations
-should be integrated as the project develops.
+[`manuscript-ai/main.tex`](manuscript-ai/main.tex) is a continuously maintained,
+unpolished research draft—not an end-of-project export. The integration
+context may add mature definitions, validated theorems, counterexamples,
+reproducible empirical findings, and supported limitations as the project
+develops.
 
-[`paper/PROVENANCE.md`](paper/PROVENANCE.md) maps manuscript labels to claim,
+[`manuscript-ai/PROVENANCE.md`](manuscript-ai/PROVENANCE.md) maps manuscript labels to claim,
 evidence, and review artifacts. Established results may not rely on unreviewed
 claims. Open conjectures may appear only when clearly labeled and may not
 support established conclusions.
@@ -193,11 +199,41 @@ support established conclusions.
 If a TeX installation is available, build from the project root with:
 
 ```sh
-latexmk -pdf -cd paper/main.tex
+latexmk -pdf -cd manuscript-ai/main.tex
 ```
 
 Generated build products are disposable; the LaTeX source and provenance map
 are authoritative.
+
+[`manuscript-human/`](manuscript-human/README.md) is the polished,
+venue-facing manuscript. It deliberately ships without a generic `main.tex`.
+Its setup and authority boundary are in its directory README; authorized
+writing follows [`docs/MANUSCRIPT_WRITING.md`](docs/MANUSCRIPT_WRITING.md).
+Its normal report includes research implications, so no separate handoff
+artifact is needed.
+
+Keep `manuscript-human/` self-contained so it can be the complete contents of
+a manuscript-only GitHub repository connected to Overleaf. A human can manage
+that repository from the parent research repository with Git subtree. For
+example, after adding a remote named `manuscript-human-remote`:
+
+```sh
+git subtree pull --prefix=manuscript-human manuscript-human-remote main --squash
+git subtree push --prefix=manuscript-human manuscript-human-remote main
+```
+
+Local writer changes under `manuscript-human/` appear normally in the parent
+repository's status and diff. Coauthor changes pushed from Overleaf become
+visible in the parent repository only after the human imports them with the
+subtree pull. Commit or otherwise preserve current parent-repository work
+before synchronizing, and resolve any conflict as a human. Agents never run
+these commands or perform GitHub/Overleaf synchronization.
+
+To validate and temporarily compile every installed manuscript, use:
+
+```sh
+python3 tools/research.py doctor --runtime codex --build-manuscripts
+```
 
 ## Operational safety
 

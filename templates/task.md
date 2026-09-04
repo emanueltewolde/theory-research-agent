@@ -37,7 +37,7 @@
 
 ## Forbidden changes
 
-- `PROJECT.md`, `STATE.md`, `ARTIFACT_INDEX.md`, `OVERVIEW.md`, `research/DIRECTIONS.md`, `research/INBOX.md`, the manuscript, completed raw evidence, and other task directories.
+- `PROJECT.md`, `STATE.md`, `ARTIFACT_INDEX.md`, `OVERVIEW.md`, `research/DIRECTIONS.md`, `research/INBOX.md`, `manuscript-ai/`, `manuscript-human/`, completed raw evidence, and other task directories.
 - Any path not explicitly allowed above.
 
 ## Context packet

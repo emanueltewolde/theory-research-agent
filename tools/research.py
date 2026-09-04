@@ -62,6 +62,7 @@ SEMANTIC_PROFILES: tuple[str, ...] = (
 PREFIXES: tuple[str, ...] = (
     "RUN", "DIR", "CLM", "ATT", "REV", "LIT", "EXP", "INB", "RPT"
 )
+MANUSCRIPT_ROOTS: tuple[str, ...] = ("manuscript-ai", "manuscript-human")
 
 GUARD_FILENAMES: tuple[str, ...] = (
     "no_git.py", "no_worktree.py", "protect_shared.py", "protect_evidence.py",
@@ -775,15 +776,16 @@ def _check_cross_reference_links(
                 path,
             )
 
-    provenance = root / "paper/PROVENANCE.md"
-    if provenance.exists():
-        bare = _bare_durable_ids(provenance.read_text(encoding="utf-8"))
-        if bare:
-            report.add(
-                "error", "bare-durable-cross-reference",
-                f"paper provenance contains unlinked durable ID(s): {', '.join(sorted(bare))}",
-                provenance,
-            )
+    for manuscript_name in MANUSCRIPT_ROOTS:
+        provenance = root / manuscript_name / "PROVENANCE.md"
+        if provenance.exists():
+            bare = _bare_durable_ids(provenance.read_text(encoding="utf-8"))
+            if bare:
+                report.add(
+                    "error", "bare-durable-cross-reference",
+                    f"{manuscript_name} provenance contains unlinked durable ID(s): {', '.join(sorted(bare))}",
+                    provenance,
+                )
 
 
 def _headings(text: str, level: int = 2) -> list[str]:
@@ -1591,7 +1593,8 @@ def initialize(root: Path) -> list[Path]:
     directories = (
         "templates", "research/directions", "research/claims", "research/attempts", "research/reviews",
         "literature/notes", "literature/searches", "experiments", "runs", "reports",
-        "paper/sections", "paper/figures", "runtime", ".codex", ".claude", "tests/fixtures",
+        "manuscript-ai/sections", "manuscript-ai/figures", "manuscript-human",
+        "runtime", ".codex", ".claude", "tests/fixtures",
     )
     created: list[Path] = []
     for relative in directories:
@@ -1691,14 +1694,15 @@ def _authoritative_markdown_paths(root: Path) -> Iterator[Path]:
     selected = set(_artifact_record_markdown_paths(root))
     for relative in (
         "AGENTS.md", "CLAUDE.md", "README.md", "PROJECT.md", "STATE.md",
-        "OVERVIEW.md", "ARTIFACT_INDEX.md", "paper/PROVENANCE.md",
+        "OVERVIEW.md", "ARTIFACT_INDEX.md", "manuscript-ai/PROVENANCE.md",
+        "manuscript-human/README.md", "manuscript-human/PROVENANCE.md",
         "runtime/PROFILES.md", ".codex/README.md", ".claude/README.md",
         "templates/README.md", "experiments/README.md", "literature/README.md",
         "literature/notes/README.md", "literature/searches/README.md",
         "research/README.md", "research/attempts/README.md",
         "research/claims/README.md", "research/directions/README.md",
         "research/reviews/README.md", "runs/README.md", "reports/README.md",
-        "paper/figures/README.md", "tools/guards/README.md",
+        "manuscript-ai/figures/README.md", "tools/guards/README.md",
     ):
         path = root / relative
         if path.is_file():
@@ -1728,12 +1732,13 @@ def _check_authoritative_utf8(root: Path, report: CheckReport) -> None:
         path = root / relative
         if path.is_file():
             paths.add(path)
-    paper = root / "paper"
-    if paper.exists() and not paper.is_symlink():
-        paths.update(
-            path for path in _walk_project_files(paper)
-            if path.suffix.casefold() == ".tex"
-        )
+    for manuscript_name in MANUSCRIPT_ROOTS:
+        manuscript = root / manuscript_name
+        if manuscript.exists() and not manuscript.is_symlink():
+            paths.update(
+                path for path in _walk_project_files(manuscript)
+                if path.suffix.casefold() in {".tex", ".bib", ".cls", ".sty"}
+            )
     bibliography = root / "literature/references.bib"
     if bibliography.is_file():
         paths.add(bibliography)
@@ -2045,7 +2050,9 @@ def _check_structure(root: Path, report: CheckReport) -> None:
     required_files = (
         "README.md", "AGENTS.md", "CLAUDE.md", "PROJECT.md", "STATE.md", "OVERVIEW.md",
         "ARTIFACT_INDEX.md", "research/DIRECTIONS.md", "research/INBOX.md",
-        "literature/references.bib", "paper/main.tex", "paper/PROVENANCE.md", "runtime/PROFILES.md",
+        "literature/references.bib", "manuscript-ai/main.tex", "manuscript-ai/PROVENANCE.md",
+        "manuscript-human/README.md", "manuscript-human/PROVENANCE.md",
+        "manuscript-human/references.bib", "runtime/PROFILES.md",
         "tools/research.py",
     )
     for relative in required_files:
@@ -4001,31 +4008,91 @@ def _check_experiments(root: Path, report: CheckReport) -> None:
 
 
 def _check_bibliography(root: Path, report: CheckReport) -> None:
-    bibliography = root / "literature/references.bib"
-    if not bibliography.exists():
-        return
-    keys: dict[str, list[str]] = {}
-    for value in re.findall(
-        r"(?mi)@\w+\s*\{\s*([^,\s]+)\s*,",
-        bibliography.read_text(encoding="utf-8"),
-    ):
-        keys.setdefault(value.casefold(), []).append(value)
-    for normalized, spellings in sorted(keys.items()):
-        if len(spellings) > 1:
-            report.add(
-                "error", "duplicate-bibtex-key",
-                f"BibTeX key `{normalized}` occurs {len(spellings)} times case-insensitively: {', '.join(spellings)}",
-                bibliography,
-            )
+    bibliography_groups: tuple[tuple[Path, tuple[Path, ...]], ...] = (
+        (
+            root / "literature/references.bib",
+            (root / "literature/references.bib",)
+            if (root / "literature/references.bib").is_file() else (),
+        ),
+        (
+            root / "manuscript-human",
+            tuple(
+                path for path in _walk_project_files(root / "manuscript-human")
+                if path.suffix.casefold() == ".bib"
+            ) if (root / "manuscript-human").is_dir() else (),
+        ),
+    )
+    for diagnostic_path, bibliographies in bibliography_groups:
+        keys: dict[str, list[tuple[str, Path]]] = {}
+        for bibliography in bibliographies:
+            for value in re.findall(
+                r"(?mi)@\w+\s*\{\s*([^,\s]+)\s*,",
+                bibliography.read_text(encoding="utf-8"),
+            ):
+                keys.setdefault(value.casefold(), []).append((value, bibliography))
+        for normalized, occurrences in sorted(keys.items()):
+            if len(occurrences) > 1:
+                locations = ", ".join(
+                    f"{spelling} ({path.relative_to(root).as_posix()})"
+                    for spelling, path in occurrences
+                )
+                report.add(
+                    "error", "duplicate-bibtex-key",
+                    f"BibTeX key `{normalized}` occurs {len(occurrences)} times case-insensitively: {locations}",
+                    diagnostic_path,
+                )
 
 
-def _tex_labels(root: Path) -> set[str]:
+def _manuscript_tex_sources(root: Path, manuscript_name: str) -> tuple[Path, ...]:
+    """Return relevant TeX sources; the human manuscript follows main.tex reachability."""
+    manuscript = root / manuscript_name
+    if not manuscript.is_dir():
+        return ()
+    all_sources = tuple(
+        path for path in _walk_project_files(manuscript)
+        if path.suffix.casefold() == ".tex"
+    )
+    if manuscript_name != "manuscript-human":
+        return all_sources
+    main = manuscript / "main.tex"
+    if not main.is_file():
+        return ()
+    manuscript_resolved = manuscript.resolve(strict=False)
+    selected: set[Path] = set()
+    pending = [main]
+    while pending:
+        source = pending.pop()
+        resolved_source = source.resolve(strict=False)
+        if resolved_source in selected:
+            continue
+        selected.add(resolved_source)
+        text = _strip_tex_comments(source.read_text(encoding="utf-8"))
+        for match in re.finditer(
+            r"\\(?:input|include)(?![A-Za-z@])\s*(?:\{([^}]*)\}|([^\s%{}]+))",
+            text,
+        ):
+            raw_target = match.group(1) if match.group(1) is not None else match.group(2)
+            target_text = raw_target.strip()
+            if not target_text or re.search(r"[\\{}$#]", target_text):
+                continue
+            target = source.parent / target_text
+            if target.suffix == "":
+                target = target.with_suffix(".tex")
+            resolved = target.resolve(strict=False)
+            try:
+                resolved.relative_to(manuscript_resolved)
+            except ValueError:
+                continue
+            if resolved.is_file() and resolved.suffix.casefold() == ".tex":
+                pending.append(resolved)
+    return tuple(sorted(selected, key=lambda path: path.as_posix()))
+
+
+def _tex_labels(root: Path, manuscript_name: str | None = None) -> set[str]:
     labels: set[str] = set()
-    paper = root / "paper"
-    if not paper.exists():
-        return labels
-    for path in _walk_project_files(paper):
-        if path.suffix.casefold() == ".tex":
+    names = (manuscript_name,) if manuscript_name is not None else MANUSCRIPT_ROOTS
+    for name in names:
+        for path in _manuscript_tex_sources(root, name):
             labels.update(re.findall(r"\\label\{([^}]+)\}", _strip_tex_comments(path.read_text(encoding="utf-8"))))
     return labels
 
@@ -4058,15 +4125,15 @@ def _strip_tex_comments(text: str) -> str:
     return "".join(rendered)
 
 
-def _check_paper_inputs(root: Path, report: CheckReport) -> None:
-    """Require static ``input``/``include`` targets to stay inside ``paper/``."""
-    paper = root / "paper"
-    if not paper.exists():
+def _check_manuscript_inputs(
+    root: Path, report: CheckReport, manuscript_name: str,
+) -> None:
+    """Require static ``input``/``include`` targets to stay inside one manuscript."""
+    manuscript = root / manuscript_name
+    if not manuscript.exists():
         return
-    paper_resolved = paper.resolve(strict=False)
-    for source in _walk_project_files(paper):
-        if source.suffix.casefold() != ".tex":
-            continue
+    manuscript_resolved = manuscript.resolve(strict=False)
+    for source in _manuscript_tex_sources(root, manuscript_name):
         text = _strip_tex_comments(source.read_text(encoding="utf-8"))
         for match in re.finditer(
             r"\\(input|include)(?![A-Za-z@])\s*(?:\{([^}]*)\}|([^\s%{}]+))", text,
@@ -4076,8 +4143,8 @@ def _check_paper_inputs(root: Path, report: CheckReport) -> None:
             target_text = raw_target.strip()
             if not target_text or re.search(r"[\\{}$#]", target_text):
                 report.add(
-                    "error", "paper-input-unresolvable",
-                    f"\\{command} target must be a static relative path: `{raw_target}`",
+                    "error", "manuscript-input-unresolvable",
+                    f"{manuscript_name} \\{command} target must be a static relative path: `{raw_target}`",
                     source,
                 )
                 continue
@@ -4086,24 +4153,117 @@ def _check_paper_inputs(root: Path, report: CheckReport) -> None:
                 target = target.with_suffix(".tex")
             resolved = target.resolve(strict=False)
             try:
-                resolved.relative_to(paper_resolved)
+                resolved.relative_to(manuscript_resolved)
             except ValueError:
                 report.add(
-                    "error", "paper-input-escape",
-                    f"\\{command} target escapes paper/: `{raw_target}`",
+                    "error", "manuscript-input-escape",
+                    f"\\{command} target escapes {manuscript_name}/: `{raw_target}`",
                     source,
                 )
                 continue
             if not resolved.is_file():
                 report.add(
-                    "error", "paper-input-missing",
-                    f"\\{command} target does not resolve to a paper source: `{raw_target}`",
+                    "error", "manuscript-input-missing",
+                    f"{manuscript_name} \\{command} target does not resolve to a manuscript source: `{raw_target}`",
                     source,
                 )
 
 
-def _check_provenance(root: Path, report: CheckReport, canonical: Mapping[str, Path]) -> None:
-    provenance = root / "paper/PROVENANCE.md"
+def _check_human_manuscript_package(root: Path, report: CheckReport) -> None:
+    """Validate the optional venue template once it has been installed."""
+    manuscript = root / "manuscript-human"
+    if not manuscript.is_dir():
+        return
+    installed_tex_sources = tuple(
+        path for path in _walk_project_files(manuscript)
+        if path.suffix.casefold() == ".tex"
+    )
+    if not installed_tex_sources:
+        report.add(
+            "info", "human-manuscript-template-pending",
+            "copy the official venue TeX template into manuscript-human/ and verify its unchanged main.tex before authorizing manuscript writing",
+            manuscript / "README.md",
+        )
+        return
+    main = manuscript / "main.tex"
+    if not main.is_file():
+        report.add(
+            "error", "human-manuscript-main-missing",
+            "an installed venue template must expose manuscript-human/main.tex as its build entry point",
+            manuscript,
+        )
+    tex_sources = _manuscript_tex_sources(root, "manuscript-human")
+
+    manuscript_resolved = manuscript.resolve(strict=False)
+    bib_keys: set[str] = set()
+    for bibliography in _walk_project_files(manuscript):
+        if bibliography.suffix.casefold() != ".bib":
+            continue
+        bib_keys.update(
+            value.casefold() for value in re.findall(
+                r"(?mi)@\w+\s*\{\s*([^,\s]+)\s*,",
+                bibliography.read_text(encoding="utf-8"),
+            )
+        )
+
+    cited_keys: dict[str, Path] = {}
+    for source in tex_sources:
+        text = _strip_tex_comments(source.read_text(encoding="utf-8"))
+        bibliography_targets: list[str] = []
+        for match in re.finditer(r"\\bibliography\s*\{([^}]*)\}", text):
+            bibliography_targets.extend(part.strip() for part in match.group(1).split(","))
+        bibliography_targets.extend(
+            match.group(1).strip()
+            for match in re.finditer(r"\\addbibresource(?:\[[^]]*\])?\s*\{([^}]*)\}", text)
+        )
+        for raw_target in bibliography_targets:
+            if not raw_target or re.search(r"[\\{}$#]", raw_target):
+                report.add(
+                    "error", "human-bibliography-unresolvable",
+                    f"bibliography target must be a static manuscript-local path: `{raw_target}`",
+                    source,
+                )
+                continue
+            target = manuscript / raw_target
+            if target.suffix == "":
+                target = target.with_suffix(".bib")
+            resolved = target.resolve(strict=False)
+            try:
+                resolved.relative_to(manuscript_resolved)
+            except ValueError:
+                report.add(
+                    "error", "human-bibliography-escape",
+                    f"bibliography target escapes manuscript-human/: `{raw_target}`",
+                    source,
+                )
+                continue
+            if not resolved.is_file():
+                report.add(
+                    "error", "human-bibliography-missing",
+                    f"bibliography target does not exist inside manuscript-human/: `{raw_target}`",
+                    source,
+                )
+        for match in re.finditer(
+            r"\\(?:[A-Za-z]*cite[A-Za-z]*|nocite)(?:\[[^]]*\])*\s*\{([^}]*)\}",
+            text,
+        ):
+            for key in match.group(1).split(","):
+                normalized = key.strip().casefold()
+                if normalized and normalized != "*":
+                    cited_keys.setdefault(normalized, source)
+    for key, source in sorted(cited_keys.items()):
+        if key not in bib_keys:
+            report.add(
+                "error", "human-citation-key-missing",
+                f"citation key `{key}` is absent from manuscript-human/ bibliography files",
+                source,
+            )
+
+
+def _check_provenance(
+    root: Path, report: CheckReport, canonical: Mapping[str, Path], manuscript_name: str,
+) -> None:
+    provenance = root / manuscript_name / "PROVENANCE.md"
     if not provenance.exists():
         return
     provenance_text = provenance.read_text(encoding="utf-8")
@@ -4115,16 +4275,14 @@ def _check_provenance(root: Path, report: CheckReport, canonical: Mapping[str, P
         if count != 1:
             report.add(
                 "error", "invalid-provenance-section-count",
-                f"paper provenance must contain exactly one `## {heading}` section; found {count}",
+                f"{manuscript_name} provenance must contain exactly one `## {heading}` section; found {count}",
                 provenance,
             )
-    tex_labels = _tex_labels(root)
+    tex_labels = _tex_labels(root, manuscript_name)
     tex_occurrences: dict[str, list[Path]] = {}
     tex_environments: dict[str, list[str]] = {}
-    paper_root = root / "paper"
-    for tex_path in _walk_project_files(paper_root) if paper_root.exists() else ():
-        if tex_path.suffix.casefold() != ".tex":
-            continue
+    manuscript_root = root / manuscript_name
+    for tex_path in _manuscript_tex_sources(root, manuscript_name):
         tex_source = _strip_tex_comments(tex_path.read_text(encoding="utf-8"))
         for latex_label in re.findall(r"\\label\{([^}]+)\}", tex_source):
             tex_occurrences.setdefault(latex_label, []).append(tex_path)
@@ -4279,7 +4437,7 @@ def _check_provenance(root: Path, report: CheckReport, canonical: Mapping[str, P
                 provenance,
             )
         if claim_labels.get("status", "").casefold() != "validated":
-            report.add("error", "stale-provenance", f"paper provenance uses {claim_id} with status `{claim_labels.get('status', 'missing')}`", provenance)
+            report.add("error", "stale-provenance", f"{manuscript_name} provenance uses {claim_id} with status `{claim_labels.get('status', 'missing')}`", provenance)
         manuscript_section = _section(claim_text, "Manuscript locations")
         reverse_link_valid = False
         for destination in re.findall(r"\[[^\]]+\]\(([^)]+)\)", manuscript_section):
@@ -4287,7 +4445,7 @@ def _check_provenance(root: Path, report: CheckReport, canonical: Mapping[str, P
                 continue
             reverse_path = (canonical[claim_id].parent / unquote(destination.split("#", 1)[0]).strip("<>")).resolve(strict=False)
             try:
-                reverse_path.relative_to((root / "paper").resolve())
+                reverse_path.relative_to(manuscript_root.resolve())
             except ValueError:
                 continue
             if reverse_path.exists() and reverse_path.is_file():
@@ -4296,15 +4454,15 @@ def _check_provenance(root: Path, report: CheckReport, canonical: Mapping[str, P
         if not label_match or label_match not in manuscript_section or not reverse_link_valid:
             report.add(
                 "error", "provenance-reverse-location-missing",
-                f"{claim_id} does not link manuscript label `{label_match or 'missing'}` back to a paper artifact from Manuscript locations",
+                f"{claim_id} does not link manuscript label `{label_match or 'missing'}` back to a {manuscript_name} artifact from Manuscript locations",
                 canonical[claim_id],
             )
         if not review_ids:
-            report.add("error", "provenance-review-missing", f"paper provenance for {claim_id} names no review", provenance)
+            report.add("error", "provenance-review-missing", f"{manuscript_name} provenance for {claim_id} names no review", provenance)
         passing_bound_review = False
         for review_id in review_ids:
             if review_id not in canonical:
-                report.add("error", "provenance-review-missing", f"paper provenance names absent review {review_id}", provenance)
+                report.add("error", "provenance-review-missing", f"{manuscript_name} provenance names absent review {review_id}", provenance)
                 continue
             review_link_targets = re.findall(r"\[[^\]]+\]\(([^)]+)\)", cells[review_column])
             if not any(
@@ -4341,13 +4499,10 @@ def _check_provenance(root: Path, report: CheckReport, canonical: Mapping[str, P
         if review_ids and not passing_bound_review:
             report.add("error", "provenance-review-not-passing", f"no named review passes the current revision and digest of {claim_id}", provenance)
         if label_match and label_match not in tex_labels and label_match.casefold() not in {"label", "manuscript label"}:
-            report.add("error", "provenance-label-missing", f"LaTeX label `{label_match}` is not present in paper sources", provenance)
+            report.add("error", "provenance-label-missing", f"LaTeX label `{label_match}` is not present in {manuscript_name} sources", provenance)
 
     tracked_environments = {"theorem", "lemma", "proposition", "corollary", "conjecture", "figure", "table"}
-    paper = root / "paper"
-    for tex_path in _walk_project_files(paper) if paper.exists() else ():
-        if tex_path.suffix.casefold() != ".tex":
-            continue
+    for tex_path in _manuscript_tex_sources(root, manuscript_name):
         tex = _strip_tex_comments(tex_path.read_text(encoding="utf-8"))
         for match in re.finditer(
             r"\\begin\{(theorem|lemma|proposition|corollary|conjecture|figure|table)\*?\}(.*?)"
@@ -4781,8 +4936,10 @@ def check_project(root: Path) -> CheckReport:
     _check_trusted_result_surfaces(root, report, canonical)
     _check_bibliography(root, report)
     _check_experiments(root, report)
-    _check_paper_inputs(root, report)
-    _check_provenance(root, report, canonical)
+    for manuscript_name in MANUSCRIPT_ROOTS:
+        _check_manuscript_inputs(root, report, manuscript_name)
+        _check_provenance(root, report, canonical, manuscript_name)
+    _check_human_manuscript_package(root, report)
     _check_tasks(root, report, canonical)
     _check_state_size(root, report)
     return report
@@ -5728,27 +5885,49 @@ def doctor(root: Path, runtime: str, build_paper: bool = False) -> CheckReport:
     if build_paper:
         engine = latexmk or pdflatex
         if not engine:
-            report.add("error", "latex-build-unavailable", "cannot build the paper without latexmk or pdflatex")
-        elif (root / "paper/main.tex").exists():
-            with tempfile.TemporaryDirectory(prefix="research-paper-build-") as temporary_root_text:
-                temporary_root = Path(temporary_root_text)
-                temporary_paper = temporary_root / "paper"
-                shutil.copytree(root / "paper", temporary_paper)
-                temporary_literature = temporary_root / "literature"
-                temporary_literature.mkdir()
-                references = root / "literature/references.bib"
-                if references.exists():
-                    shutil.copy2(references, temporary_literature / "references.bib")
-                if Path(engine).name == "latexmk":
-                    command = [engine, "-pdf", "-interaction=nonstopmode", "-halt-on-error", "main.tex"]
-                else:
-                    command = [engine, "-interaction=nonstopmode", "-halt-on-error", "main.tex"]
-                completed = subprocess.run(command, cwd=temporary_paper, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=120, check=False)
-                if completed.returncode:
-                    tail = "\n".join(completed.stdout.splitlines()[-12:])
-                    report.add("error", "latex-build-failed", f"paper build failed:\n{tail}", root / "paper/main.tex")
-                else:
-                    report.add("info", "latex-build-passed", "paper built successfully in a temporary directory", root / "paper/main.tex")
+            report.add("error", "latex-build-unavailable", "cannot build manuscripts without latexmk or pdflatex")
+        else:
+            for manuscript_name in MANUSCRIPT_ROOTS:
+                source_manuscript = root / manuscript_name
+                source_main = source_manuscript / "main.tex"
+                if not source_main.exists():
+                    if manuscript_name == "manuscript-human":
+                        report.add(
+                            "info", "human-manuscript-build-skipped",
+                            "official venue template has not yet supplied manuscript-human/main.tex",
+                            source_manuscript / "README.md",
+                        )
+                    continue
+                with tempfile.TemporaryDirectory(prefix=f"research-{manuscript_name}-build-") as temporary_root_text:
+                    temporary_root = Path(temporary_root_text)
+                    temporary_manuscript = temporary_root / manuscript_name
+                    shutil.copytree(source_manuscript, temporary_manuscript)
+                    if manuscript_name == "manuscript-ai":
+                        temporary_literature = temporary_root / "literature"
+                        temporary_literature.mkdir()
+                        references = root / "literature/references.bib"
+                        if references.exists():
+                            shutil.copy2(references, temporary_literature / "references.bib")
+                    if Path(engine).name == "latexmk":
+                        command = [engine, "-pdf", "-interaction=nonstopmode", "-halt-on-error", "main.tex"]
+                    else:
+                        command = [engine, "-interaction=nonstopmode", "-halt-on-error", "main.tex"]
+                    completed = subprocess.run(
+                        command, cwd=temporary_manuscript, stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT, text=True, timeout=120, check=False,
+                    )
+                    if completed.returncode:
+                        tail = "\n".join(completed.stdout.splitlines()[-12:])
+                        report.add(
+                            "error", "latex-build-failed",
+                            f"{manuscript_name} build failed:\n{tail}", source_main,
+                        )
+                    else:
+                        report.add(
+                            "info", "latex-build-passed",
+                            f"{manuscript_name} built successfully in a temporary directory",
+                            source_main,
+                        )
     return report
 
 
@@ -5864,7 +6043,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
     doctor_parser = subparsers.add_parser("doctor", help="check project, adapter, guard, and optional tool readiness")
     doctor_parser.add_argument("--runtime", choices=("codex", "claude"), required=True)
-    doctor_parser.add_argument("--build-paper", action="store_true", help="compile the paper into a temporary directory")
+    doctor_parser.add_argument(
+        "--build-manuscripts", "--build-paper", dest="build_manuscripts",
+        action="store_true",
+        help="compile each installed manuscript into a temporary directory",
+    )
 
     adapter_parser = subparsers.add_parser("adapters", help="synchronize or validate checked-in runtime adapters")
     adapter_parser.add_argument("--runtime", choices=("codex", "claude"), required=True)
@@ -5910,7 +6093,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if arguments.command == "check":
             report = check_project(root)
         elif arguments.command == "doctor":
-            report = doctor(root, arguments.runtime, arguments.build_paper)
+            report = doctor(root, arguments.runtime, arguments.build_manuscripts)
         elif arguments.command == "adapters":
             report = adapters(root, arguments.runtime, arguments.check)
         else:  # pragma: no cover - argparse makes this unreachable

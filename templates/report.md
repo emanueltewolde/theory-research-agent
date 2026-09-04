@@ -41,8 +41,9 @@
 
 ## Manuscript progress
 
-- **Current source:** [`paper/main.tex`](../paper/main.tex)
-- **Latest PDF:** unavailable or not built
+- **AI draft source:** [`manuscript-ai/main.tex`](../manuscript-ai/main.tex)
+- **Human manuscript:** template not installed or not authorized
+- **Latest PDFs:** unavailable or not built
 - **Mature sections:** none
 - **Known stale provenance:** none
 

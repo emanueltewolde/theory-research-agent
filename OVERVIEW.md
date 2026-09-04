@@ -40,9 +40,10 @@ currently registered.
 
 ## Manuscript progress
 
-The paper skeleton exists, but it contains no research claims. See
-[`paper/main.tex`](paper/main.tex) and
-[`paper/PROVENANCE.md`](paper/PROVENANCE.md).
+The continuously maintained AI draft skeleton contains no research claims. See
+[`manuscript-ai/main.tex`](manuscript-ai/main.tex) and
+[`manuscript-ai/PROVENANCE.md`](manuscript-ai/PROVENANCE.md). The polished
+[`manuscript-human/`](manuscript-human/README.md) manuscript has not started.
 
 ## Consequential human decisions needed
 
@@ -51,4 +52,3 @@ The paper skeleton exists, but it contains no research claims. See
 ## Recent milestone reports
 
 None.
-
