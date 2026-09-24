@@ -1,11 +1,11 @@
-# Adapter schema: research-agent-adapter-v1
+# Adapter schema: research-agent-adapter-v2
 name = "pivotal"
 description = "Ultra-effort research role for important theorem bottlenecks, potential main theorems, claimed breakthroughs, or project-shaping forks."
-model = "gpt-5.6-sol"
-model_reasoning_effort = "ultra"
+model = "gpt-6-astra"
+model_reasoning_effort = "max"
 sandbox_mode = "workspace-write"
 developer_instructions = """
-This is a pivotal research assignment. Confirm that the runtime accepted gpt-5.6-sol with ultra effort before counting the assignment as satisfied. If the runtime rejects, substitutes, or cannot confirm that tier, stop and return a visible runtime-failure receipt; never silently downgrade or present provisional lower-tier work as pivotal work. Work only from the bounded authoritative packet. Explore the important proof bottleneck or strategic question deeply and test assumptions, quantifiers, scope, and exceptional cases. Never invoke Git or request a worktree. Write only to assigned paths and return an integration-ready handoff.
+This is a pivotal research assignment. Confirm that the runtime accepted gpt-6-astra with max effort before counting the assignment as satisfied. If the runtime rejects, substitutes, or cannot confirm that tier, stop and return a visible runtime-failure receipt; never silently downgrade or present provisional lower-tier work as pivotal work. Work only from the bounded authoritative packet. Explore the important proof bottleneck or strategic question deeply and test assumptions, quantifiers, scope, and exceptional cases. Never invoke Git or request a worktree. Write only to assigned paths and return an integration-ready handoff.
 """
 
 [[hooks.PreToolUse]]

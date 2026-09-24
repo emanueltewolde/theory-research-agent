@@ -52,10 +52,10 @@ from typing import Callable, Iterable, Iterator, Mapping, Sequence
 from urllib.parse import unquote
 
 
-ADAPTER_SCHEMA = "research-agent-adapter-v1"
+ADAPTER_SCHEMA = "research-agent-adapter-v2"
 # Retain explicitly supported historical schemas here when upgrading, along
 # with a version-aware mapping resolver. Unknown versions never bypass gates.
-SUPPORTED_ADAPTER_SCHEMAS = frozenset({ADAPTER_SCHEMA})
+SUPPORTED_ADAPTER_SCHEMAS = frozenset({"research-agent-adapter-v1", "research-agent-adapter-v2", ADAPTER_SCHEMA})
 SEMANTIC_PROFILES: tuple[str, ...] = (
     "maintenance", "coordinator", "substantive", "deep", "pivotal",
 )
@@ -3362,7 +3362,10 @@ def _review_receipt_valid(review_id: str, review_path: Path, labels: Mapping[str
         and receipt.get("runtime failure", "").casefold().strip() in {"none", "not applicable"}
         and receipt.get("substitution", "").casefold().strip() in {"none", "not applicable"}
         and recorded_mapping is not None
-        and actual_mapping == recorded_mapping
+        and _resolved_mapping_matches(
+            _runtime_for_provider(receipt.get("resolved provider", "")) or "",
+            actual_mapping, recorded_mapping or ("", ""),
+        )
         and task_binding_valid
         and receipt_sections_final
         and receipt_integrity
@@ -4587,6 +4590,21 @@ def _recorded_adapter_mapping(
     return mappings.get((adapter_version.strip().strip("`").casefold(), runtime, profile.casefold().strip("` ")))
 
 
+def _resolved_mapping_matches(runtime: str, actual: tuple[str, str], expected: tuple[str, str]) -> bool:
+    """Match a resolved receipt to its versioned requested model mapping.
+
+    Claude family aliases deliberately resolve to concrete release IDs. Accept
+    only the corresponding documented family prefix while preserving exact
+    effort matching; all other model mappings remain exact.
+    """
+    actual_model, actual_effort = actual
+    expected_model, expected_effort = expected
+    model_matches = actual_model == expected_model
+    if runtime == "claude" and expected_model in {"opus", "haiku", "sonnet"}:
+        model_matches = actual_model == expected_model or actual_model.startswith(f"claude-{expected_model}-")
+    return model_matches and actual_effort == expected_effort
+
+
 def _adapter_mapping_history(
     profiles_path: Path,
 ) -> tuple[dict[tuple[str, str, str], tuple[str, str]], list[str]]:
@@ -4835,7 +4853,10 @@ def _check_tasks(root: Path, report: CheckReport, canonical: Mapping[str, Path])
             has_substitution = substitution not in {"", "none", "pending", "not applicable"}
             if expected_mapping is None:
                 report.add("error", "runtime-profile-unverifiable", f"cannot resolve {requested} for provider `{receipt.get('resolved provider', '')}` from runtime/PROFILES.md", directory / "RECEIPT.md")
-            elif actual_mapping != expected_mapping:
+            elif not _resolved_mapping_matches(
+                _runtime_for_provider(receipt.get("resolved provider", "")) or "",
+                actual_mapping, expected_mapping,
+            ):
                 receipt_path = directory / "RECEIPT.md"
                 immutable_review_receipt = any(
                     review_id.startswith("REV-")
@@ -4854,7 +4875,10 @@ def _check_tasks(root: Path, report: CheckReport, canonical: Mapping[str, Path])
                     not has_substitution
                     and immutable_review_receipt
                     and recorded_mapping is not None
-                    and actual_mapping == recorded_mapping
+                    and _resolved_mapping_matches(
+                        _runtime_for_provider(receipt.get("resolved provider", "")) or "",
+                        actual_mapping, recorded_mapping,
+                    )
                 ):
                     report.add(
                         "info", "historical-profile-mapping",

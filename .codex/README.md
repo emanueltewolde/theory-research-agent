@@ -1,6 +1,6 @@
 # Codex adapter
 
-Adapter schema: `research-agent-adapter-v1`
+Adapter schema: `research-agent-adapter-v2`
 
 This directory contains only runtime mechanics. The research method and source
 of truth remain in the root instructions and research artifacts.
@@ -53,12 +53,12 @@ absolute paths as a machine-local adapter step and re-trust the changed hooks.
   the model's ordinary command tool and cannot be disabled by a documented
   project `config.toml` key.
 
-`pivotal.toml` requests Codex `ultra` on `gpt-5.6-sol`, as exposed by current
-local-agent documentation. If the installed client/account does not support
-that setting, the pivotal agent must stop and report a runtime failure; it must
-not silently run as `xhigh` or `max`. The API's `max` effort is a separate
-surface and should not be substituted into this file without validating the
-Codex client.
+The project agents map maintenance to GPT-6 Luna, coordinator/substantive and
+ordinary verification to GPT-6 Sol, and deep/pivotal work to GPT-6 Astra. The
+pivotal profiles request `max`; deep profiles request `xhigh`. If the installed
+client/account does not resolve the requested model and effort, the agent must
+stop and report a runtime failure rather than silently downgrade. Confirm these
+settings on the installed Codex runtime before relying on them.
 
 ## Limits
 

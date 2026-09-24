@@ -1,7 +1,7 @@
-# Adapter schema: research-agent-adapter-v1
+# Adapter schema: research-agent-adapter-v2
 name = "coordinator"
 description = "Broad-context research coordinator for selecting work, integrating evidence, triaging directions, and updating authoritative state."
-model = "gpt-5.6-sol"
+model = "gpt-6-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """

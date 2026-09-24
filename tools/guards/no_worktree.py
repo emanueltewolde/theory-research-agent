@@ -11,7 +11,7 @@ import sys
 from collections.abc import Sequence
 
 
-ADAPTER_SCHEMA = "research-agent-adapter-v1"
+ADAPTER_SCHEMA = "research-agent-adapter-v2"
 BLOCK_EXIT = 2
 
 

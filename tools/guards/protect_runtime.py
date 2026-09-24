@@ -20,7 +20,7 @@ import sys
 from collections.abc import Iterable, Sequence
 
 
-ADAPTER_SCHEMA = "research-agent-adapter-v1"
+ADAPTER_SCHEMA = "research-agent-adapter-v2"
 BLOCK_EXIT = 2
 _PROTECTED_PREFIXES = (".agents/", ".claude/", ".codex/", "runtime/", "tools/guards/")
 _PROTECTED_EXACT = (".mcp.json", "AGENTS.md", "CLAUDE.md", "tools/research.py")

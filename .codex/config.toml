@@ -1,4 +1,4 @@
-# Adapter schema: research-agent-adapter-v1
+# Adapter schema: research-agent-adapter-v2
 # Project-local Codex configuration. Codex loads it only for a trusted project.
 
 approval_policy = "on-request"

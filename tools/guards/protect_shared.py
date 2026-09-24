@@ -19,7 +19,7 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 
-ADAPTER_SCHEMA = "research-agent-adapter-v1"
+ADAPTER_SCHEMA = "research-agent-adapter-v2"
 BLOCK_EXIT = 2
 
 _PROTECTED_EXACT = {

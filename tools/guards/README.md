@@ -1,6 +1,6 @@
 # Runtime guards
 
-Adapter schema: `research-agent-adapter-v1`
+Adapter schema: `research-agent-adapter-v2`
 
 These dependency-free Python programs are synchronous pre-tool guards shared
 by the Codex and Claude Code adapters:

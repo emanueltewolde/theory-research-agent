@@ -1,7 +1,7 @@
-# Adapter schema: research-agent-adapter-v1
+# Adapter schema: research-agent-adapter-v2
 name = "deep"
 description = "Extra-high focused role for subtle central claims, difficult verification, or a task that defeated a serious substantive attempt."
-model = "gpt-5.6-sol"
+model = "gpt-6-astra"
 model_reasoning_effort = "xhigh"
 sandbox_mode = "workspace-write"
 developer_instructions = """

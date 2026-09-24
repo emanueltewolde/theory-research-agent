@@ -25,7 +25,7 @@ except ImportError:  # pragma: no cover - exercised by the supported 3.10 CLI.
 
 ROOT = Path(__file__).resolve().parents[1]
 GUARD_DIR = ROOT / "tools" / "guards"
-SCHEMA = "research-agent-adapter-v1"
+SCHEMA = "research-agent-adapter-v2"
 FOCUSED_ROLES = (
     "maintenance", "substantive", "deep", "pivotal",
     "verifier", "verifier_deep", "verifier_pivotal",

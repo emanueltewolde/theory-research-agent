@@ -1,6 +1,6 @@
 # Semantic runtime profiles
 
-Adapter schema: `research-agent-adapter-v1`
+Adapter schema: `research-agent-adapter-v2`
 
 Research artifacts request semantic profiles. Provider names, model aliases,
 effort controls, permissions, and invocation syntax belong only in this file
@@ -19,16 +19,17 @@ permissions actually resolved on the installed runtime.
 
 | Profile | Use | Codex mapping | Claude Code mapping |
 |---|---|---|---|
-| `maintenance` | Link repair, formatting, registry assistance, and routine summaries | `gpt-5.6-terra`, `medium` | `haiku`, `medium` |
-| `coordinator` | Broad-context selection, integration, triage, and strategy | `gpt-5.6-sol`, `high` | `opus`, `high` |
-| `substantive` | Default proof attempts, counterexample search, experimental design, literature synthesis, and ordinary verification | `gpt-5.6-sol`, `high` | `opus`, `high` |
-| `deep` | Subtle central claims, difficult verification, or work following a serious failed substantive attempt | `gpt-5.6-sol`, `xhigh` | `opus`, `xhigh` |
-| `pivotal` | Important main-theorem bottlenecks, claimed breakthroughs, skeptical central review, or project-shaping forks | `gpt-5.6-sol`, `ultra` | `opus`, `max` |
+| `maintenance` | Link repair, formatting, registry assistance, and routine summaries | `gpt-6-luna`, `medium` | `haiku`, `medium` |
+| `coordinator` | Broad-context selection, integration, triage, and strategy | `gpt-6-sol`, `high` | `opus`, `high` |
+| `substantive` | Default proof attempts, counterexample search, experimental design, literature synthesis, and ordinary verification | `gpt-6-sol`, `high` | `opus`, `high` |
+| `deep` | Subtle central claims, difficult verification, or work following a serious failed substantive attempt | `gpt-6-astra`, `xhigh` | `opus`, `xhigh` |
+| `pivotal` | Important main-theorem bottlenecks, claimed breakthroughs, skeptical central review, or project-shaping forks | `gpt-6-astra`, `max` | `opus`, `max` |
 
 ## Adapter mapping history
 
-This table is append-only. Every completed receipt resolves its recorded model
-and effort against the rows for its recorded adapter version. When any mapping
+This table is append-only. Every completed receipt records the runtime-resolved
+model and effort. The mapping history records the requested model or family
+alias; a family alias accepts a concrete resolved model from that family. When any mapping
 changes, assign a new adapter version throughout the runtime adapter, append a
 complete set of rows for that version, and retain every older row so historical
 receipts and reviews remain auditable without artifact migration.
@@ -45,6 +46,11 @@ receipts and reviews remain auditable without artifact migration.
 | `research-agent-adapter-v1` | `claude` | `substantive` | `opus` | `high` |
 | `research-agent-adapter-v1` | `claude` | `deep` | `opus` | `xhigh` |
 | `research-agent-adapter-v1` | `claude` | `pivotal` | `opus` | `max` |
+| `research-agent-adapter-v2` | `codex` | `maintenance` | `gpt-6-luna` | `medium` |
+| `research-agent-adapter-v2` | `codex` | `coordinator` | `gpt-6-sol` | `high` |
+| `research-agent-adapter-v2` | `codex` | `substantive` | `gpt-6-sol` | `high` |
+| `research-agent-adapter-v2` | `codex` | `deep` | `gpt-6-astra` | `xhigh` |
+| `research-agent-adapter-v2` | `codex` | `pivotal` | `gpt-6-astra` | `max` |
 
 `verifier`, `verifier_deep`, and `verifier_pivotal` are fresh-context
 responsibility definitions mapped to `substantive`, `deep`, and `pivotal`,
@@ -55,11 +61,13 @@ verifier, which is reserved for unusually complex or consequential central
 claims.
 
 The names describe intended research effort, not identical computation across
-providers. Codex's current local-agent documentation exposes `ultra` when the
-selected model supports it. The GPT-5.6 API exposes `max` as its highest API
-reasoning effort; these are different configuration surfaces. Claude Code
+providers. GPT-6 Astra is used for the highest-effort Codex profiles. Claude
+uses the rolling `opus` and `haiku` family aliases, so Claude Code may resolve
+them to newer releases over time; receipts retain the concrete resolved model.
+Claude Code
 supports `max` in subagent frontmatter even though `max` is not accepted as a
-persistent top-level `effortLevel` setting.
+persistent top-level `effortLevel` setting. Confirm runtime resolution before
+relying on any requested model or effort.
 
 ## Resolution rules
 
@@ -126,6 +134,10 @@ Current configuration references:
 
 - [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
 - [Codex hooks](https://learn.chatgpt.com/docs/hooks)
-- [GPT-5.6 Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol)
+- [OpenAI GPT-6 models](https://developers.openai.com/api/docs/models)
 - [Claude Code subagents](https://code.claude.com/docs/en/subagents)
 - [Claude Code model configuration](https://code.claude.com/docs/en/model-config)
+- [Claude Code CLI model aliases](https://code.claude.com/docs/en/cli-usage)
+- [Anthropic Claude Opus 5.5 announcement](https://www.anthropic.com/claude-opus-5-5)
+- [Anthropic Claude Sonnet 5 announcement](https://www.anthropic.com/news/claude-sonnet-5)
+- [Anthropic model deprecations and current Haiku availability](https://docs.anthropic.com/en/docs/about-claude/model-deprecations)
