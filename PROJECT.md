@@ -62,7 +62,8 @@ examples. Precise source claims should later receive `LIT-####` records.]
 ## Expected deliverable
 
 [Describe the intended paper, note, theorem map, experimental appendix, or
-other final research product.]
+other final research product. The periodic results overview collects supported
+findings; a selective curated paper is optional and driven by writing requests.]
 
 ## Operational constraints
 

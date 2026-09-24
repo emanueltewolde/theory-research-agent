@@ -1,5 +1,5 @@
 {
-  "description": "research-agent-adapter-v2: project safety policy for Git, worktrees, evidence, and runtime configuration.",
+  "description": "research-agent-adapter-v3: project safety policy for Git, worktrees, evidence, and runtime configuration.",
   "hooks": {
     "PreToolUse": [
       {

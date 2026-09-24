@@ -1,4 +1,4 @@
-# Adapter schema: research-agent-adapter-v2
+# Adapter schema: research-agent-adapter-v3
 name = "substantive"
 description = "Default focused high-reasoning role for proof attempts, counterexample searches, experiment design, literature synthesis, and ordinary verification."
 model = "gpt-6-sol"

@@ -1,4 +1,4 @@
-# Adapter schema: research-agent-adapter-v2
+# Adapter schema: research-agent-adapter-v3
 name = "verifier"
 description = "Fresh-context independent verifier for exact claim correctness, evidence validity, and fidelity to the intended research question."
 model = "gpt-6-sol"

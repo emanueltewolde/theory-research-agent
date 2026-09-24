@@ -12,7 +12,7 @@ hooks:
           command: 'python3 "$CLAUDE_PROJECT_DIR/tools/guards/protect_shared.py" --role verifier --hook claude'
           timeout: 10
 ---
-<!-- Adapter schema: research-agent-adapter-v1 -->
+<!-- Adapter schema: research-agent-adapter-v3 -->
 
 Skeptically verify the exact claim revision and digest in the supplied fresh
 packet at the `pivotal` semantic profile. Separately test correctness and exact

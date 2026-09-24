@@ -12,7 +12,7 @@ hooks:
           command: 'python3 "$CLAUDE_PROJECT_DIR/tools/guards/protect_shared.py" --role substantive --hook claude'
           timeout: 10
 ---
-<!-- Adapter schema: research-agent-adapter-v1 -->
+<!-- Adapter schema: research-agent-adapter-v3 -->
 
 Pursue the exact bounded research question and successful outcomes in the task
 packet. A proof, a valid counterexample, or a sharply localized obstruction can

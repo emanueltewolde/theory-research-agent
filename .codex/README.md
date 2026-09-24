@@ -1,6 +1,6 @@
 # Codex adapter
 
-Adapter schema: `research-agent-adapter-v2`
+Adapter schema: `research-agent-adapter-v3`
 
 This directory contains only runtime mechanics. The research method and source
 of truth remain in the root instructions and research artifacts.
@@ -21,6 +21,9 @@ Hook commands use paths relative to the session working directory. The normal
 workflow therefore starts at the project root, as required by the template. If
 a host routinely starts Codex in subdirectories, render these commands to
 absolute paths as a machine-local adapter step and re-trust the changed hooks.
+
+The optional `writer` definition uses `substantive` effort for user-requested
+writing; it loads the writing guide and orientation on demand.
 
 ## Safety behavior
 

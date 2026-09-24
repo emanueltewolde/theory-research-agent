@@ -64,8 +64,9 @@ Portfolio and inbox items use the same labels under a level-two item heading bec
 | Source meaning and translation into project terminology | The relevant literature record |
 | Chronological session history | The relevant run record |
 | Human navigation | `OVERVIEW.md` and milestone reports |
-| Continuously maintained research exposition | `manuscript-ai/`, linked through its provenance map |
-| Human-directed venue exposition | `manuscript-human/`, linked through its separate provenance map |
+| Broad, periodically refreshed result collection | `results_overview/`, linked through its provenance map |
+| Paper story, selection, and project-specific writing conventions | `curated_manuscript/WRITING_ORIENTATION.md` (human-maintained) |
+| Human-directed venue exposition | `curated_manuscript/`, linked through its separate provenance map |
 
 ## Operational controlled values
 
@@ -224,7 +225,7 @@ A review verdict is `pass`, `fail`, `narrower-than-stated`, or `inconclusive`. I
 
 The verifier writes only the review and its assigned task output. It cannot edit the target claim. `pass` requires both evidence correctness and exact claim fidelity. A narrower valid result becomes a revised or new candidate claim and receives a fresh review.
 
-An established manuscript theorem requires at least one passing independent review of its current digest at its recorded required profile.
+An established project theorem in either document requires a passing independent review of its current digests at its recorded required profile. Precisely attributed imported literature follows the provenance rule below.
 
 A validated claim's `Independent reviews` table links the passing review at
 its canonical path. If either manuscript provenance map cites the claim, the claim's
@@ -234,7 +235,7 @@ records.
 
 ## Literature records
 
-[`literature/references.bib`](../literature/references.bib) is the canonical research bibliography. The self-contained human manuscript copies only its needed, checked entries into `manuscript-human/` while preserving keys and metadata. A literature note records its BibTeX key, stable locator, precise theorem/page/section location, source assumptions, careful project-facing paraphrase, translation between source and project terminology, transferable techniques, relationships, contradictions, and limitations.
+[`literature/references.bib`](../literature/references.bib) is the canonical research bibliography. The self-contained curated manuscript copies only its needed, checked entries into `curated_manuscript/` while preserving keys and metadata. A literature note records its BibTeX key, stable locator, precise theorem/page/section location, source assumptions, careful project-facing paraphrase, translation between source and project terminology, transferable techniques, relationships, contradictions, and limitations.
 
 A consequential search record adds search locations, exact queries, search dates, selection logic, coverage limits, and unresolved gaps. Allocate it with `python3 tools/research.py new literature --search`; ordinary `new literature` creates a source note. Neither record should claim exhaustive coverage unless the recorded protocol warrants it.
 
@@ -264,7 +265,34 @@ Important findings must be promoted to claims, attempts, experiments, or literat
 
 [`OVERVIEW.md`](../OVERVIEW.md) is a mutable navigation page. A report begins as `draft` and becomes an immutable milestone snapshot when its status changes to `published`. A correction creates a new report whose `Supersedes` link names the prior snapshot; the prior report remains unchanged and `published`.
 
-Each manuscript has its own provenance map associating every established theorem, lemma, figure, and table label with claim, evidence, and review links. A claim that becomes rejected, refuted, superseded, or stale makes every linked manuscript location stale until repaired. Open conjectures may appear only when visibly labeled and cannot support established conclusions.
+Each document keeps a compact `PROVENANCE.md` with last content refresh and
+covered scope. They need not cover the same results or be refreshed together.
+Do not put internal run IDs or bookkeeping into the venue-facing paper.
+
+- **Established manuscript items:** each project theorem, proposition, lemma,
+  corollary, figure, or table label links to one or more canonical claims,
+  evidence, and passing reviews. Every linked claim must be validated with a
+  current bound review at its required profile, and link back from its
+  `Manuscript locations`. Grouping is for exposition, not a license to infer
+  an unreviewed stronger statement.
+- **Imported literature items:** optional table for labeled restatements, with
+  columns `LaTeX label`, `Manuscript role`, `Literature note`, `Source locator`,
+  `Application and scope`, and `Status` (`imported`). Link a completed
+  canonical LIT source note, the precise theorem/page/section, and explain
+  applicability and any notation translation. Ordinary citations need no
+  duplicate claim or provenance row. Nontrivial adaptations and new conclusions
+  still require a project claim and independent review.
+- **Open or explicitly provisional items:** identify their source and concrete
+  limitation, and visibly label them in the text; they cannot support an
+  established conclusion.
+- **Stale items requiring revision:** record affected labels and needed repairs
+  when a source is corrected, rejected, refuted, or superseded. Missing newer
+  findings is coverage lag, not invalidation. Research reports curated-paper
+  impacts without editing it absent a writing request.
+
+A writing pass checks exact statement fidelity against these sources; a
+passing source review is not itself a review of the manuscript's wording.
+Validators check links/status/review bindings, not mathematical equivalence.
 
 ## Link and placeholder conventions
 

@@ -1,0 +1,19 @@
+# Adapter schema: research-agent-adapter-v3
+name = "writer"
+description = "Bounded, human-directed curated manuscript writing using the shared guide and project orientation."
+model = "gpt-6-sol"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Perform only the explicitly user-authorized curated_manuscript writing task. Read docs/MANUSCRIPT_WRITING.md and curated_manuscript/WRITING_ORIENTATION.md, then relevant source claims, reviews, and literature. Use the substantive profile. Write only assigned curated_manuscript files and this task's output/receipt or scratch files. Keep WRITING_ORIENTATION.md read-only; propose changes in OUTPUT.md. Do not edit results_overview, research/evidence records, shared controls, runtime policy, or other tasks. Respect protected passages. Return source-fidelity and build checks plus Research implications in the existing output. Never invoke Git, request a worktree, or synchronize Overleaf.
+"""
+
+[[hooks.PreToolUse]]
+matcher = "^(apply_patch|Bash|Edit|Write)$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "python3 tools/guards/protect_shared.py --role writer --hook codex"
+command_windows = "py -3 tools\\guards\\protect_shared.py --role writer --hook codex"
+timeout = 10
+statusMessage = "Protecting research records during writing"

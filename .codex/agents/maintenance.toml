@@ -1,4 +1,4 @@
-# Adapter schema: research-agent-adapter-v2
+# Adapter schema: research-agent-adapter-v3
 name = "maintenance"
 description = "Low-cost focused role for routine artifact formatting, link checks, registry assistance, and concise summaries; not for substantive research."
 model = "gpt-6-luna"

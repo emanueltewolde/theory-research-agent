@@ -1,4 +1,4 @@
-# Adapter schema: research-agent-adapter-v2
+# Adapter schema: research-agent-adapter-v3
 # Native exec-policy defense in depth. The PreToolUse guard also covers shell
 # wrappers, compound strings, Git metadata access, and uncommon executable paths.
 

@@ -81,10 +81,20 @@ Normal boundaries are:
 
 | Context | May update | Must not update |
 |---|---|---|
-| Integration authority | Shared current state, portfolio, indexes, overview, and `manuscript-ai/`, subject to human contract authority | Raw completed evidence; contract intent without approval; `manuscript-human/` without a current explicit writing request |
+| Integration authority | Shared current state, portfolio, indexes, overview, and `results_overview/`, subject to human contract authority | Raw completed evidence; contract intent without approval; `curated_manuscript/` without a current explicit writing request |
 | Focused research | Its unique task directory and explicitly preallocated artifacts | Shared control records, other tasks, both manuscripts, raw evidence |
 | Independent verifier | Its review and task output | Target claim or producer evidence |
-| Human-directed writing session | Specifically authorized `manuscript-human/` locations and its provenance map | Unapproved manuscript areas; claims, reviews, control records, Git, or Overleaf synchronization |
+| Writer subagent or writing session | Specifically authorized `curated_manuscript/` locations and its provenance map | Unapproved manuscript areas, orientation without user approval, results overview, research/control records, Git, or Overleaf synchronization |
+
+The optional `writer` role uses the existing `substantive` profile, not a new
+effort tier. Its task packet names the authorized sections, source records,
+writing guide, and orientation. Use the normal task/output/receipt files and
+report research implications there. It does not allocate IDs or integrate
+research records. Its coarse hook protects the orientation and all paths
+outside curated-manuscript content and run-local task outputs; exact assigned
+paths and protected passages remain instruction-level boundaries. A user-
+authorized orientation change is integrated by the human or writing-session
+lead, not delegated to that guarded role.
 
 ## No-Git invariant
 

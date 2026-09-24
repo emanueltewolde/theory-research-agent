@@ -23,7 +23,7 @@ import sys
 from collections.abc import Iterable, Sequence
 
 
-ADAPTER_SCHEMA = "research-agent-adapter-v2"
+ADAPTER_SCHEMA = "research-agent-adapter-v3"
 BLOCK_EXIT = 2
 
 _SHELLS = {

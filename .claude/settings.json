@@ -5,7 +5,7 @@
   "enableAllProjectMcpServers": false,
   "env": {
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
-    "RESEARCH_AGENT_ADAPTER_SCHEMA": "research-agent-adapter-v1"
+    "RESEARCH_AGENT_ADAPTER_SCHEMA": "research-agent-adapter-v3"
   },
   "permissions": {
     "defaultMode": "default",

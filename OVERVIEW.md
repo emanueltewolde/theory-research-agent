@@ -40,10 +40,13 @@ currently registered.
 
 ## Manuscript progress
 
-The continuously maintained AI draft skeleton contains no research claims. See
-[`manuscript-ai/main.tex`](manuscript-ai/main.tex) and
-[`manuscript-ai/PROVENANCE.md`](manuscript-ai/PROVENANCE.md). The polished
-[`manuscript-human/`](manuscript-human/README.md) manuscript has not started.
+- **Results overview:** [source](results_overview/main.tex);
+  [coverage and provenance](results_overview/PROVENANCE.md). Empty scaffold.
+- **Curated manuscript:** [setup](curated_manuscript/README.md);
+  [orientation](curated_manuscript/WRITING_ORIENTATION.md);
+  [coverage and provenance](curated_manuscript/PROVENANCE.md). Not started.
+- **PDFs / document impacts:** link available builds and flag invalidated
+  assertions when refreshing; do not imply either document covers newer work.
 
 ## Consequential human decisions needed
 

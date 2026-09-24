@@ -12,7 +12,7 @@ hooks:
           command: 'python3 "$CLAUDE_PROJECT_DIR/tools/guards/protect_shared.py" --role deep --hook claude'
           timeout: 10
 ---
-<!-- Adapter schema: research-agent-adapter-v1 -->
+<!-- Adapter schema: research-agent-adapter-v3 -->
 
 Work only on the bounded high-leverage question and supplied authoritative
 packet. Treat proof, counterexample, impossibility, narrowing, and a precise

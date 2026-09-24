@@ -1,6 +1,6 @@
 # Claude Code adapter
 
-Adapter schema: `research-agent-adapter-v1`
+Adapter schema: `research-agent-adapter-v3`
 
 Claude Code reads the shared root `CLAUDE.md`/`AGENTS.md` instructions and the
 provider mechanics in this directory. Project agents use replaceable model
@@ -22,6 +22,9 @@ environment variables precedence over subagent frontmatter. Organization
 model allowlists can also substitute a blocked family alias. Any warning or
 substitution must appear in the task receipt, and `deep`/`pivotal` work stops
 instead of silently downgrading.
+
+The optional `writer` definition uses `substantive` effort for user-requested
+writing; it loads the writing guide and orientation on demand.
 
 ## Safety behavior
 

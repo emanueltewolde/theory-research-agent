@@ -1,6 +1,6 @@
 # Semantic runtime profiles
 
-Adapter schema: `research-agent-adapter-v2`
+Adapter schema: `research-agent-adapter-v3`
 
 Research artifacts request semantic profiles. Provider names, model aliases,
 effort controls, permissions, and invocation syntax belong only in this file
@@ -51,6 +51,25 @@ receipts and reviews remain auditable without artifact migration.
 | `research-agent-adapter-v2` | `codex` | `substantive` | `gpt-6-sol` | `high` |
 | `research-agent-adapter-v2` | `codex` | `deep` | `gpt-6-astra` | `xhigh` |
 | `research-agent-adapter-v2` | `codex` | `pivotal` | `gpt-6-astra` | `max` |
+| `research-agent-adapter-v2` | `claude` | `maintenance` | `haiku` | `medium` |
+| `research-agent-adapter-v2` | `claude` | `coordinator` | `opus` | `high` |
+| `research-agent-adapter-v2` | `claude` | `substantive` | `opus` | `high` |
+| `research-agent-adapter-v2` | `claude` | `deep` | `opus` | `xhigh` |
+| `research-agent-adapter-v2` | `claude` | `pivotal` | `opus` | `max` |
+| `research-agent-adapter-v3` | `codex` | `maintenance` | `gpt-6-luna` | `medium` |
+| `research-agent-adapter-v3` | `codex` | `coordinator` | `gpt-6-sol` | `high` |
+| `research-agent-adapter-v3` | `codex` | `substantive` | `gpt-6-sol` | `high` |
+| `research-agent-adapter-v3` | `codex` | `deep` | `gpt-6-astra` | `xhigh` |
+| `research-agent-adapter-v3` | `codex` | `pivotal` | `gpt-6-astra` | `max` |
+| `research-agent-adapter-v3` | `claude` | `maintenance` | `haiku` | `medium` |
+| `research-agent-adapter-v3` | `claude` | `coordinator` | `opus` | `high` |
+| `research-agent-adapter-v3` | `claude` | `substantive` | `opus` | `high` |
+| `research-agent-adapter-v3` | `claude` | `deep` | `opus` | `xhigh` |
+| `research-agent-adapter-v3` | `claude` | `pivotal` | `opus` | `max` |
+
+The v2 Claude rows retain the unchanged rolling-alias mappings from its
+previous adapter. Version 3 aligns both adapter schemas and adds the optional
+`writer` responsibility mapped to `substantive`; it does not change models.
 
 `verifier`, `verifier_deep`, and `verifier_pivotal` are fresh-context
 responsibility definitions mapped to `substantive`, `deep`, and `pivotal`,
@@ -90,12 +109,16 @@ relying on any requested model or effort.
 
 - The `coordinator` is the only adapter role permitted to integrate
   `PROJECT.md`, `STATE.md`, `ARTIFACT_INDEX.md`, `OVERVIEW.md`, the direction
-  portfolio, the inbox, or `manuscript-ai/`. `manuscript-human/` follows its
+  portfolio, the inbox, or `results_overview/`. `curated_manuscript/` follows its
   separate human-directed boundary. Consequential contract edits still require
   an explicit human decision.
 - Focused agents write only their assigned run/task directory and explicitly
   preallocated artifact paths. Provider hooks mechanically protect central
   records, and their instructions require a handoff to the coordinator.
+- The optional `writer` uses `substantive` for bounded curated-manuscript
+  writing under an explicit user request. It reads the writing guide and
+  orientation, writes only assigned manuscript/task paths, and returns research
+  implications without updating research records or the orientation.
 - A verifier writes its assigned review/output only and never edits the target
   claim. Verification must use a fresh context packet rather than the
   producer's conversational reasoning.

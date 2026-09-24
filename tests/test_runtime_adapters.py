@@ -25,10 +25,10 @@ except ImportError:  # pragma: no cover - exercised by the supported 3.10 CLI.
 
 ROOT = Path(__file__).resolve().parents[1]
 GUARD_DIR = ROOT / "tools" / "guards"
-SCHEMA = "research-agent-adapter-v2"
+SCHEMA = "research-agent-adapter-v3"
 FOCUSED_ROLES = (
     "maintenance", "substantive", "deep", "pivotal",
-    "verifier", "verifier_deep", "verifier_pivotal",
+    "verifier", "verifier_deep", "verifier_pivotal", "writer",
 )
 ALL_ROLES = ("maintenance", "coordinator", *FOCUSED_ROLES)
 
@@ -301,11 +301,55 @@ class ImmutableEvidenceGuardTests(unittest.TestCase):
 
 
 class ProtectedSharedRecordGuardTests(unittest.TestCase):
+    def test_writer_can_edit_curated_content_and_task_output_but_not_research(self) -> None:
+        for path in ("curated_manuscript/main.tex", "curated_manuscript/PROVENANCE.md",
+                     "curated_manuscript/sections/results.tex", "runs/RUN-0001/tasks/T01/OUTPUT.md"):
+            with self.subTest(path=path):
+                payload = {"tool_name": "Edit", "tool_input": {"file_path": path}}
+                self.assertIsNone(PROTECT_SHARED.protected_target(payload, "writer"))
+        for path in ("curated_manuscript/WRITING_ORIENTATION.md", "results_overview/main.tex",
+                     "research/claims/CLM-0001.md", "research/reviews/REV-0001.md",
+                     "literature/references.bib", "experiments/new.py", "STATE.md",
+                     "runs/RUN-0001/RUN.md", "runs/RUN-0001/tasks/T01/TASK.md"):
+            with self.subTest(path=path):
+                for payload in (
+                    {"tool_name": "Edit", "tool_input": {"file_path": path}},
+                    {"tool_name": "Bash", "tool_input": {"command": f"printf changed > {path}"}},
+                    {"tool_name": "apply_patch", "tool_input": {"command": f"*** Begin Patch\n*** Update File: {path}\n*** End Patch"}},
+                ):
+                    self.assertIsNotNone(PROTECT_SHARED.protected_target(payload, "writer"))
+
+    def test_writer_shell_reads_builds_and_bound_writes_remain_usable(self) -> None:
+        for command in (
+            "cat research/claims/CLM-0001.md",
+            "sed -n '1,30p' curated_manuscript/WRITING_ORIENTATION.md",
+            "printf updated > curated_manuscript/main.tex",
+            "latexmk -pdf -cd curated_manuscript/main.tex",
+            "cd curated_manuscript && latexmk -pdf main.tex",
+            "python3 tools/research.py check",
+        ):
+            with self.subTest(command=command):
+                payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(ROOT)}
+                self.assertIsNone(PROTECT_SHARED.protected_target(payload, "writer"))
+        move = {"tool_name": "apply_patch", "tool_input": {"command":
+                "*** Begin Patch\n*** Update File: curated_manuscript/main.tex\n"
+                "*** Move to: research/claims/CLM-0001.md\n*** End Patch"}}
+        self.assertIsNotNone(PROTECT_SHARED.protected_target(move, "writer"))
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "AGENTS.md").touch()
+            (root / "ARTIFACT_INDEX.md").touch()
+            (root / "curated_manuscript").mkdir()
+            (root / "research").mkdir()
+            (root / "curated_manuscript/alias.tex").symlink_to(root / "research/claim.md")
+            payload = {"cwd": temp, "tool_name": "Write", "tool_input": {"file_path": "curated_manuscript/alias.tex"}}
+            self.assertIsNotNone(PROTECT_SHARED.protected_target(payload, "writer"))
+
     def test_focused_writes_to_integration_owned_records_are_blocked(self) -> None:
         blocked = (
             {"tool_name": "Write", "tool_input": {"file_path": "STATE.md"}},
-            {"tool_name": "Edit", "tool_input": {"file_path": "manuscript-ai/main.tex"}},
-            {"tool_name": "Edit", "tool_input": {"file_path": "manuscript-human/main.tex"}},
+            {"tool_name": "Edit", "tool_input": {"file_path": "results_overview/main.tex"}},
+            {"tool_name": "Edit", "tool_input": {"file_path": "curated_manuscript/main.tex"}},
             {"tool_name": "Write", "tool_input": {"path": ".codex/config.toml"}},
             {
                 "tool_name": "apply_patch",
@@ -453,7 +497,7 @@ class AdapterConfigurationTests(unittest.TestCase):
     @unittest.skipUnless(tomllib is not None, "stdlib tomllib requires Python 3.11+")
     def test_codex_toml_files_parse_with_the_standard_library(self) -> None:
         paths = [ROOT / ".codex" / "config.toml", *(ROOT / ".codex" / "agents").glob("*.toml")]
-        self.assertEqual(9, len(paths))
+        self.assertEqual(1 + len(set(ALL_ROLES)), len(paths))
         for path in paths:
             with self.subTest(path=path.relative_to(ROOT)):
                 parsed = tomllib.loads(path.read_text(encoding="utf-8"))
@@ -484,6 +528,7 @@ class AdapterConfigurationTests(unittest.TestCase):
                 "verifier": "substantive",
                 "verifier_deep": "deep",
                 "verifier_pivotal": "pivotal",
+                "writer": "substantive",
             }.get(role, role)
             codex_text = (ROOT / ".codex" / "agents" / f"{role}.toml").read_text(encoding="utf-8")
             model_match = re.search(r'(?m)^model\s*=\s*["\']([^"\']+)["\']', codex_text)

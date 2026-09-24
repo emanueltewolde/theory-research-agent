@@ -1,4 +1,4 @@
-# Adapter schema: research-agent-adapter-v2
+# Adapter schema: research-agent-adapter-v3
 name = "verifier_deep"
 description = "Fresh-context deep verifier for subtle central claims and difficult verification."
 model = "gpt-6-astra"

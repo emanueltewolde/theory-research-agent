@@ -1,0 +1,49 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{[Project Title]: Results Overview}
+\author{[Authors]}
+% Set an actual refresh date when updating content; compilation is not a refresh.
+\date{Not yet populated}
+
+\begin{document}
+\maketitle
+
+\section*{At a glance}
+This document collects the project's supported findings, with definitions,
+assumptions, short explanations, and links to their evidence in
+\texttt{PROVENANCE.md}. Full proofs remain in the research records.
+No research results have been added yet.
+
+% Replace this paragraph with the main results, their essential assumptions,
+% important limitations/counterexamples, and open gaps, organized by direction.
+% Include mature less-central results too; group or subsume without strengthening.
+The sections below cover the model and definitions, findings organized by
+research direction, and open questions. The provenance map records coverage
+and the last content refresh; this is not a selective paper draft.
+
+\tableofcontents
+\input{sections/model}
+\input{sections/results}
+\input{sections/open_questions}
+
+% Enable these when actual literature is cited:
+% \bibliographystyle{alpha}
+% \bibliography{../literature/references}
+\end{document}

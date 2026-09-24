@@ -15,7 +15,7 @@
 
 ## Question
 
-[State one bounded research or verification question.]
+[State one bounded research, verification, or authorized writing objective.]
 
 ## Successful outcomes
 
@@ -37,8 +37,13 @@
 
 ## Forbidden changes
 
-- `PROJECT.md`, `STATE.md`, `ARTIFACT_INDEX.md`, `OVERVIEW.md`, `research/DIRECTIONS.md`, `research/INBOX.md`, `manuscript-ai/`, `manuscript-human/`, completed raw evidence, and other task directories.
+- `PROJECT.md`, `STATE.md`, `ARTIFACT_INDEX.md`, `OVERVIEW.md`, `research/DIRECTIONS.md`, `research/INBOX.md`, `results_overview/`, `curated_manuscript/`, completed raw evidence, and other task directories.
 - Any path not explicitly allowed above.
+
+<!-- For a writer task, replace the blanket curated_manuscript prohibition
+with the exact authorized paths. Include the writing guide, orientation, and
+source records; keep orientation and all research/control records read-only.
+Use Requested profile: substantive and the normal output/receipt. -->
 
 ## Context packet
 

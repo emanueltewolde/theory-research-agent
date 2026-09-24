@@ -39,11 +39,10 @@ boundaries while leaving decomposition and detailed reasoning to the models.
    an agent, is authoritative for consequential choices.
 4. Inspect and, if needed, edit the replaceable model mappings in
    [`runtime/PROFILES.md`](runtime/PROFILES.md).
-5. If an agent will work on the polished paper, first copy the official
-   conference or journal TeX template into
-   [`manuscript-human/`](manuscript-human/README.md), expose its entry point as
-   `main.tex`, and verify that the untouched template compiles. This is not
-   required to begin research or maintain the AI draft.
+5. The basic [results overview](results_overview/main.tex) is ready to populate.
+   When you want a selective paper, follow
+   [curated manuscript setup](curated_manuscript/README.md): install the venue
+   template and fill its writing orientation. This is optional during research.
 6. Validate the workspace and selected runtime:
 
    ```sh
@@ -58,7 +57,7 @@ boundaries while leaving decomposition and detailed reasoning to the models.
 
 8. Review the run handoff after each substantial session. Every two or three
    substantial runs—or sooner at a milestone—review [`OVERVIEW.md`](OVERVIEW.md)
-   and the current manuscript.
+   and the results overview.
 9. If you use version control, perform checkpoints yourself or through trusted
    external automation. Research agents in this workspace must not run Git.
 
@@ -88,7 +87,7 @@ The workspace separates four kinds of information:
 | Control | Human intent, present state, portfolio, and ID registry | `PROJECT.md`, `STATE.md`, `ARTIFACT_INDEX.md`, `research/DIRECTIONS.md`, `research/INBOX.md` |
 | Durable knowledge | Claims, attempts, verification, literature, and experiments | `research/`, `literature/`, `experiments/` |
 | History | Concise chronological handoffs and task receipts | `runs/` |
-| Synthesis | Human navigation, the living research draft, and human-directed venue exposition | `OVERVIEW.md`, `reports/`, `manuscript-ai/`, `manuscript-human/` |
+| Synthesis | Human navigation, a broad result collection, and selective venue exposition | `OVERVIEW.md`, `reports/`, `results_overview/`, `curated_manuscript/` |
 
 Detailed schemas and status vocabularies are in
 [`docs/ARTIFACTS.md`](docs/ARTIFACTS.md). The end-to-end lifecycle is in
@@ -132,7 +131,7 @@ failed proof attempt.
 
 One integrating context promotes supported conclusions, preserves negative
 results, triages deferred items, updates the direction portfolio, requests
-verification, and curates validated work into `manuscript-ai/`. It completes the run
+verification, and periodically refreshes `results_overview/`. It completes the run
 handoff and updates `STATE.md` last. That final state update is the integration
 marker used by the next session.
 
@@ -183,46 +182,44 @@ mutation from a human/trusted shell; the in-runtime safety hook deliberately
 prevents an agent from weakening its own configuration. None of these commands
 invokes Git.
 
-## Two-manuscript workflow
+## Two complementary documents
 
-[`manuscript-ai/main.tex`](manuscript-ai/main.tex) is a continuously maintained,
-unpolished research draft—not an end-of-project export. The integration
-context may add mature definitions, validated theorems, counterexamples,
-reproducible empirical findings, and supported limitations as the project
-develops.
+| Document | Purpose | When updated |
+|---|---|---|
+| [Results overview](results_overview/main.tex) | Broad, structured collection of mature findings, assumptions, and explanations, without full proofs; each result links to evidence | At human-overview/milestone refreshes |
+| [Curated manuscript](curated_manuscript/README.md) | Selective, polished research paper driven by the user's story and contribution choices | On explicit writing requests |
 
-[`manuscript-ai/PROVENANCE.md`](manuscript-ai/PROVENANCE.md) maps manuscript labels to claim,
-evidence, and review artifacts. Established results may not rely on unreviewed
-claims. Open conjectures may appear only when clearly labeled and may not
-support established conclusions.
+Both draw independently from research records and precise literature sources.
+Neither is authoritative research evidence or a required input for the other.
+They may lag independently: their provenance maps record last refresh and
+coverage. Missing new results is different from retaining an invalidated
+assertion, which must be flagged stale.
 
-If a TeX installation is available, build from the project root with:
+The [writing guide](docs/MANUSCRIPT_WRITING.md) and user-filled
+[orientation](curated_manuscript/WRITING_ORIENTATION.md) are loaded for writing,
+not routine research. Use a writing session or an optional `writer` subagent;
+its normal report includes research implications. Detailed general writing
+principles remain to be discussed.
+
+Build the overview with an existing TeX installation:
 
 ```sh
-latexmk -pdf -cd manuscript-ai/main.tex
+latexmk -pdf -cd results_overview/main.tex
 ```
 
-Generated build products are disposable; the LaTeX source and provenance map
-are authoritative.
+### Human-owned Overleaf sync
 
-[`manuscript-human/`](manuscript-human/README.md) is the polished,
-venue-facing manuscript. It deliberately ships without a generic `main.tex`.
-Its setup and authority boundary are in its directory README; authorized
-writing follows [`docs/MANUSCRIPT_WRITING.md`](docs/MANUSCRIPT_WRITING.md).
-Its normal report includes research implications, so no separate handoff
-artifact is needed.
-
-Keep `manuscript-human/` self-contained so it can be the complete contents of
+Keep `curated_manuscript/` self-contained so it can be the complete contents of
 a manuscript-only GitHub repository connected to Overleaf. A human can manage
 that repository from the parent research repository with Git subtree. For
-example, after adding a remote named `manuscript-human-remote`:
+example, after adding a remote named `curated_manuscript-remote`:
 
 ```sh
-git subtree pull --prefix=manuscript-human manuscript-human-remote main --squash
-git subtree push --prefix=manuscript-human manuscript-human-remote main
+git subtree pull --prefix=curated_manuscript curated_manuscript-remote main --squash
+git subtree push --prefix=curated_manuscript curated_manuscript-remote main
 ```
 
-Local writer changes under `manuscript-human/` appear normally in the parent
+Local writer changes under `curated_manuscript/` appear normally in the parent
 repository's status and diff. Coauthor changes pushed from Overleaf become
 visible in the parent repository only after the human imports them with the
 subtree pull. Commit or otherwise preserve current parent-repository work
@@ -234,6 +231,14 @@ To validate and temporarily compile every installed manuscript, use:
 ```sh
 python3 tools/research.py doctor --runtime codex --build-manuscripts
 ```
+
+### Upgrading an existing research project
+
+These folders replace `manuscript-ai/` and `manuscript-human/`. In a populated
+project, preserve historical drafts and source links; do not simply relabel a
+proof-heavy AI draft as a proof-free overview. Curate an overview from its
+supported findings, move the venue paper deliberately, and repair current
+provenance/backlinks. No automatic content migration is supplied.
 
 ## Operational safety
 

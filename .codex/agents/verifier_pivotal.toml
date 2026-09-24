@@ -1,4 +1,4 @@
-# Adapter schema: research-agent-adapter-v2
+# Adapter schema: research-agent-adapter-v3
 name = "verifier_pivotal"
 description = "Fresh-context pivotal skeptical verifier for claimed breakthroughs and project-shaping claims."
 model = "gpt-6-astra"

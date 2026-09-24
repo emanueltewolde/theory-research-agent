@@ -22,7 +22,7 @@ import tempfile
 from collections.abc import Sequence
 
 
-ADAPTER_SCHEMA = "research-agent-adapter-v2"
+ADAPTER_SCHEMA = "research-agent-adapter-v3"
 BLOCK_EXIT = 2
 _PATCH_TARGET = re.compile(
     r"^\*\*\* (Add|Update|Delete) File:\s*(.+?)\s*$", re.MULTILINE

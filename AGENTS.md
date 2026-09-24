@@ -43,10 +43,10 @@ choose decomposition and detailed reasoning methods according to the task.
   logical/evidential correctness and fidelity to the stated assumptions,
   quantifiers, scope, exceptional cases, and project question.
 - A verifier writes the review and does not repair the target claim in place.
-- Only sufficiently validated findings enter either manuscript as established.
-  Keep each manuscript's `PROVENANCE.md` synchronized with theorem, lemma,
-  figure, and table labels. Mark manuscript content stale when its source
-  claim is rejected or superseded.
+- Both LaTeX documents derive from research records, not from each other.
+  Keep established project results bound to validated claims and passing
+  reviews in each `PROVENANCE.md`; attribute imported literature precisely.
+  Coverage may lag, but flag assertions whose sources are corrected or rejected.
 
 ## Responsibilities and change boundaries
 
@@ -54,11 +54,14 @@ choose decomposition and detailed reasoning methods according to the task.
   paper synthesis are responsibilities, not mandatory permanent agents.
 - One integrating context at a time updates `STATE.md`, `PROJECT.md`,
   `ARTIFACT_INDEX.md`, the shared portfolio/inbox, `OVERVIEW.md`, and
-  `manuscript-ai/`.
-- `manuscript-human/` is human-directed. Do not load it during ordinary
+  `results_overview/`.
+- Refresh `results_overview/` at overview/milestone reviews: a broad, faithful
+  collection of supported findings with context and provenance, not full proofs.
+- `curated_manuscript/` is human-directed. Do not load it during ordinary
   research or edit it unless the current user request explicitly authorizes
   the particular writing work. For authorized writing, load
-  `docs/MANUSCRIPT_WRITING.md`.
+  `docs/MANUSCRIPT_WRITING.md` and its user-filled `WRITING_ORIENTATION.md`.
+  An optional `writer` subagent may perform bounded writing under that request.
 - Focused contexts write only their assigned task directory or explicitly
   preallocated artifact paths. They do not update shared control records.
 - Verifiers do not edit target claims. Completed experiment executions and

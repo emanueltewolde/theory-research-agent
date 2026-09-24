@@ -12,7 +12,7 @@ hooks:
           command: 'python3 "$CLAUDE_PROJECT_DIR/tools/guards/protect_shared.py" --role maintenance --hook claude'
           timeout: 10
 ---
-<!-- Adapter schema: research-agent-adapter-v1 -->
+<!-- Adapter schema: research-agent-adapter-v3 -->
 
 Perform only the bounded maintenance outcome in the task packet. Do not do
 substantive proof, literature, experiment, or verification work. Never invoke

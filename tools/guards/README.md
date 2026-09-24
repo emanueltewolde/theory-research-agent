@@ -1,6 +1,6 @@
 # Runtime guards
 
-Adapter schema: `research-agent-adapter-v2`
+Adapter schema: `research-agent-adapter-v3`
 
 These dependency-free Python programs are synchronous pre-tool guards shared
 by the Codex and Claude Code adapters:
@@ -28,7 +28,9 @@ by the Codex and Claude Code adapters:
   adapters without naming their targets in the command. `check` and `doctor`
   remain allowed. For the verifier role it additionally makes every target
   under `research/claims/` read-only, while leaving the assigned review path
-  writable. The guard is deliberately not installed for the coordinator.
+  writable. The writer variant permits curated content and task outputs, but
+  protects the orientation and other research/control paths. Specific section
+  permissions remain in the task packet. The guard is deliberately not installed for the coordinator.
 
 Both runtimes pass JSON on standard input. A safe request exits `0`; a blocked
 request explains the policy on standard error and exits `2`, which both current

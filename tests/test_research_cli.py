@@ -176,11 +176,16 @@ class ProjectFixture(unittest.TestCase):
         self.set_registry_status(claim_id, "candidate")
         return claim_id, relative
 
-    def make_validated_claim(self):
-        self.accept_contract()
-        run_id, run_relative = research.create_artifact(self.root, "run", "Verification run")
-        task_id = f"{run_id}-T01"
-        task_dir = (self.root / run_relative).parent / "tasks/T01"
+    def make_validated_claim(self, run_id=None):
+        if run_id is None:
+            self.accept_contract()
+            run_id, run_relative = research.create_artifact(self.root, "run", "Verification run")
+        else:
+            run_relative = Path("runs") / run_id / "RUN.md"
+        tasks = (self.root / run_relative).parent / "tasks"
+        task_code = f"T{len(list(tasks.glob('T*'))) + 1:02d}"
+        task_id = f"{run_id}-{task_code}"
+        task_dir = tasks / task_code
         task_dir.mkdir()
         for filename in ("TASK.md", "OUTPUT.md", "RECEIPT.md"):
             source = (self.root / "templates" / filename.lower()).read_text()
@@ -190,8 +195,10 @@ class ProjectFixture(unittest.TestCase):
                 source = source.replace("- **Base state revision:** pending", "- **Base state revision:** 1")
             elif filename == "RECEIPT.md":
                 values = {
-                    "Resolved provider": "OpenAI Codex", "Resolved model": "gpt-5.6-sol",
-                    "Resolved effort": "high", "Runtime mode": "focused",
+                    "Resolved provider": "OpenAI Codex",
+                    "Resolved model": research._expected_runtime_mapping(self.root, "codex", "substantive")[0],
+                    "Resolved effort": research._expected_runtime_mapping(self.root, "codex", "substantive")[1],
+                    "Runtime mode": "focused",
                     "Runtime version": "codex-cli test",
                     "Adapter version": research.ADAPTER_SCHEMA, "Fresh context": "yes",
                     "Status": "completed", "Started": "2026-08-17T00:00:00Z",
@@ -239,7 +246,7 @@ class ProjectFixture(unittest.TestCase):
         finalized_sections = {
             "Relationship to the project question": "This resolves the synthetic objective at the stated scope.",
             "Dependencies": "None.",
-            "Evidence": f"- **Primary evidence:** mathematical proof\n- **Evidence location:** [task output](../../runs/{run_id}/tasks/T01/OUTPUT.md)\n- **What the evidence establishes:** the exact statement.",
+            "Evidence": f"- **Primary evidence:** mathematical proof\n- **Evidence location:** [task output](../../runs/{run_id}/tasks/{task_code}/OUTPUT.md)\n- **What the evidence establishes:** the exact statement.",
             "Proof or derivation": "Nonnegativity follows directly from the finite-model definition.",
             "Known limitations and open issues": "None.",
         }
@@ -328,7 +335,7 @@ class ProjectFixture(unittest.TestCase):
         replacements = {
             "Status": "completed",
             "Verdict": "pass",
-            "Task receipt": f"[receipt](../../runs/{run_id}/tasks/T01/RECEIPT.md)",
+            "Task receipt": f"[receipt](../../runs/{run_id}/tasks/{task_code}/RECEIPT.md)",
             "Created in": f"[{run_id}](../../runs/{run_id}/RUN.md)",
             "Last updated in": f"[{run_id}](../../runs/{run_id}/RUN.md)",
             "Evidence or proof correct": "yes",
@@ -1327,7 +1334,7 @@ class CoreCLITests(ProjectFixture):
         self.assertIn("invalid-index", diagnostic_codes(research.check_project(self.root)))
 
         index.write_text(original)
-        provenance = self.root / "manuscript-ai/PROVENANCE.md"
+        provenance = self.root / "results_overview/PROVENANCE.md"
         provenance.write_text(
             provenance.read_text()
             + "\n## Stale items requiring revision\n\n| LaTeX label | Reason stale | Former source | Required action |\n|---|---|---|---|\n"
@@ -1338,14 +1345,14 @@ class CoreCLITests(ProjectFixture):
         )
 
     def test_manuscript_input_cannot_escape_its_tree(self) -> None:
-        main = self.root / "manuscript-ai/main.tex"
+        main = self.root / "results_overview/main.tex"
         main.write_text(main.read_text() + "\n\\input{../../outside-secret}\n")
         self.assertIn("manuscript-input-escape", diagnostic_codes(research.check_project(self.root)))
         main.write_text(main.read_text() + "\n\\input ../../unbraced-secret.tex\n")
         self.assertIn("manuscript-input-escape", diagnostic_codes(research.check_project(self.root)))
 
     def test_installed_human_template_requires_main_entry_point(self) -> None:
-        sample = self.root / "manuscript-human/conference-template.tex"
+        sample = self.root / "curated_manuscript/conference-template.tex"
         sample.write_text("\\documentclass{article}\n\\begin{document}Template\\end{document}\n")
         self.assertIn(
             "human-manuscript-main-missing",
@@ -1353,18 +1360,18 @@ class CoreCLITests(ProjectFixture):
         )
 
     def test_unused_venue_sample_tex_is_not_treated_as_manuscript_content(self) -> None:
-        main = self.root / "manuscript-human/main.tex"
+        main = self.root / "curated_manuscript/main.tex"
         main.write_text("\\documentclass{article}\n\\begin{document}Paper\\end{document}\n")
-        sample = self.root / "manuscript-human/sample-from-venue.tex"
+        sample = self.root / "curated_manuscript/sample-from-venue.tex"
         sample.write_text(
             "\\begin{theorem}Example only.\\label{thm:venue-sample}\\end{theorem}\n"
         )
         codes = diagnostic_codes(research.check_project(self.root))
         self.assertNotIn("unprovenanced-manuscript-item", codes)
-        self.assertNotIn("thm:venue-sample", research._tex_labels(self.root, "manuscript-human"))
+        self.assertNotIn("thm:venue-sample", research._tex_labels(self.root, "curated_manuscript"))
 
     def test_human_manuscript_is_self_contained_and_citations_resolve(self) -> None:
-        main = self.root / "manuscript-human/main.tex"
+        main = self.root / "curated_manuscript/main.tex"
         main.write_text(
             "\\documentclass{article}\n"
             "\\begin{document}\\cite{missing-key}\\end{document}\n"
@@ -1379,7 +1386,7 @@ class CoreCLITests(ProjectFixture):
             "\\begin{document}\\cite{local-key}\\end{document}\n"
             "\\bibliography{references}\n"
         )
-        bibliography = self.root / "manuscript-human/references.bib"
+        bibliography = self.root / "curated_manuscript/references.bib"
         bibliography.write_text("@article{local-key, title={Local source}}\n")
         codes = diagnostic_codes(research.check_project(self.root))
         self.assertNotIn("human-bibliography-escape", codes)
@@ -1387,7 +1394,7 @@ class CoreCLITests(ProjectFixture):
         self.assertNotIn("human-citation-key-missing", codes)
 
     def test_unrelated_tex_commands_are_not_misparsed_as_input(self) -> None:
-        main = self.root / "manuscript-ai/main.tex"
+        main = self.root / "results_overview/main.tex"
         main.write_text(
             main.read_text()
             + "\n\\includegraphics{../../outside-figure.png}\n"
@@ -1398,9 +1405,9 @@ class CoreCLITests(ProjectFixture):
         self.assertNotIn("manuscript-input-missing", codes)
 
     def test_commented_tex_claims_and_inputs_are_ignored_but_escaped_percent_is_content(self) -> None:
-        main = self.root / "manuscript-ai/main.tex"
+        main = self.root / "results_overview/main.tex"
         main.write_text(main.read_text() + "\n% \\input{../../commented-outside}\n")
-        results = self.root / "manuscript-ai/sections/results.tex"
+        results = self.root / "results_overview/sections/results.tex"
         results.write_text(
             "% \\begin{theorem}\n"
             "% \\label{thm:commented}\n"
@@ -1656,7 +1663,8 @@ class EpistemicGateTests(ProjectFixture):
         lines = profiles.read_text().splitlines()
         for index, line in enumerate(lines):
             if line.startswith("| `substantive` |"):
-                lines[index] = line.replace("`gpt-5.6-sol`", "`gpt-future`", 1)
+                model = research._expected_runtime_mapping(self.root, "codex", "substantive")[0]
+                lines[index] = line.replace(f"`{model}`", "`gpt-future`", 1)
                 break
         else:
             self.fail("missing substantive profile row")
@@ -1673,7 +1681,7 @@ class EpistemicGateTests(ProjectFixture):
         receipt = next(self.root.glob("runs/RUN-*/tasks/T01/RECEIPT.md"))
         receipt.write_text(
             receipt.read_text()
-            .replace("- **Resolved model:** gpt-5.6-sol", "- **Resolved model:** gpt-fake-low", 1)
+            .replace(research._expected_runtime_mapping(self.root, "codex", "substantive")[0], "gpt-fake-low", 1)
             .replace("- **Resolved effort:** high", "- **Resolved effort:** low", 1)
         )
         codes = diagnostic_codes(research.check_project(self.root))
@@ -1828,16 +1836,16 @@ class EpistemicGateTests(ProjectFixture):
 
     def test_paper_requires_current_passing_review_and_provenance(self) -> None:
         claim_id, claim_path, review_id, review_path = self.make_validated_claim()
-        results = self.root / "manuscript-ai/sections/results.tex"
+        results = self.root / "results_overview/sections/results.tex"
         results.write_text("\\begin{theorem}\\label{thm:main} Result.\\end{theorem}\n")
         claim_file = self.root / claim_path
         claim_text = re.sub(
             r"(?ms)^## Manuscript locations\s*\n.*?(?=^## |\Z)",
-            "## Manuscript locations\n\n- `thm:main` in [results.tex](../../manuscript-ai/sections/results.tex).\n\n",
+            "## Manuscript locations\n\n- `thm:main` in [results.tex](../../results_overview/sections/results.tex).\n\n",
             claim_file.read_text(), count=1,
         )
         claim_file.write_text(claim_text)
-        provenance = self.root / "manuscript-ai/PROVENANCE.md"
+        provenance = self.root / "results_overview/PROVENANCE.md"
         text = provenance.read_text()
         row = (
             f"| `thm:main` | theorem | [{claim_id}](../{claim_path.as_posix()}) | "
@@ -1859,7 +1867,7 @@ class EpistemicGateTests(ProjectFixture):
         )
         provenance.write_text(text.replace(claim_cell, extra_claim_cell, 1))
         self.assertIn(
-            "provenance-claim-link-invalid",
+            "stale-provenance",
             diagnostic_codes(research.check_project(self.root)),
         )
         provenance.write_text(text)
@@ -1896,14 +1904,91 @@ class EpistemicGateTests(ProjectFixture):
         self.set_label(review_path.as_posix(), "Verdict", "fail")
         self.assertIn("provenance-review-not-passing", diagnostic_codes(research.check_project(self.root)))
 
+    def test_grouped_result_requires_current_review_for_every_claim(self) -> None:
+        first = self.make_validated_claim()
+        run_id = next(self.root.glob("runs/RUN-*/RUN.md")).parent.name
+        second = self.make_validated_claim(run_id=run_id)
+        for manuscript in research.MANUSCRIPT_ROOTS:
+            with self.subTest(manuscript=manuscript):
+                main = self.root / manuscript / "main.tex"
+                main.write_text("\\begin{theorem}\\label{thm:grouped}Together.\\end{theorem}\n")
+                for claim_id, claim_path, _, _ in (first, second):
+                    path = self.root / claim_path
+                    text = path.read_text().replace(
+                        "## Manuscript locations\n",
+                        f"## Manuscript locations\n\n- [thm:grouped](../../{manuscript}/PROVENANCE.md)\n",
+                    )
+                    path.write_text(text)
+                claims = "; ".join(f"[{c}](../{p})" for c, p, _, _ in (first, second))
+                reviews = "; ".join(f"[{r}](../{p})" for _, _, r, p in (first, second))
+                provenance = self.root / manuscript / "PROVENANCE.md"
+                row = f"| thm:grouped | theorem | {claims} | {claims} | {reviews} | established |"
+                original = provenance.read_text()
+                populated = original.replace("|---|---|---|---|---|---|", "|---|---|---|---|---|---|\n" + row, 1)
+                provenance.write_text(populated)
+                report = research.check_project(self.root)
+                self.assertEqual([], report.errors, [d.render(self.root) for d in report.errors])
+                # One good review must not cover the other source claim.
+                provenance.write_text(populated.replace(f"[{second[2]}](../{second[3]})", "", 1))
+                self.assertIn("provenance-review-not-passing", diagnostic_codes(research.check_project(self.root)))
+                provenance.write_text(populated)
+                self.set_label(second[1].as_posix(), "Status", "superseded")
+                self.assertIn("stale-provenance", diagnostic_codes(research.check_project(self.root)))
+                self.set_label(second[1].as_posix(), "Status", "validated")
+
+    def test_imported_literature_needs_precise_current_source_not_project_claim(self) -> None:
+        self.accept_contract()
+        note_id, relative = research.create_artifact(self.root, "literature", "Synthetic source")
+        note = self.root / relative
+        self.set_label(relative.as_posix(), "Status", "completed")
+        # Test this boundary alone; a complete LIT schema is checked independently.
+        canonical = {note_id: note}
+        for manuscript in research.MANUSCRIPT_ROOTS:
+            (self.root / manuscript / "main.tex").write_text(
+                "\\begin{theorem}\\label{thm:imported}Imported result.\\end{theorem}\n"
+            )
+            provenance = self.root / manuscript / "PROVENANCE.md"
+            original = provenance.read_text()
+            row = (f"| thm:imported | theorem | [{note_id}](../{relative}) | "
+                   "Theorem 2, page 4 | Same finite model; rename x to y only. | imported |")
+            populated = original
+            position = populated.index("## Open or explicitly provisional items")
+            populated = populated[:position].rstrip() + "\n" + row + "\n\n" + populated[position:]
+            provenance.write_text(populated)
+            def check():
+                report = research.CheckReport()
+                research._check_provenance(self.root, report, canonical, manuscript)
+                return report
+            self.assertEqual([], check().errors)
+            provenance.write_text(populated.replace("Theorem 2, page 4", "pending"))
+            self.assertIn("imported-literature-detail-missing", diagnostic_codes(check()))
+            provenance.write_text(populated)
+            self.set_label(relative.as_posix(), "Status", "superseded")
+            self.assertIn("stale-provenance", diagnostic_codes(check()))
+            self.set_label(relative.as_posix(), "Status", "completed")
+            provenance.write_text(populated.replace(f"[{note_id}](../{relative})", f"[{note_id}](../PROJECT.md)"))
+            self.assertIn("imported-literature-source-invalid", diagnostic_codes(check()))
+
+    def test_curated_setup_is_optional_and_bibliography_name_is_venue_defined(self) -> None:
+        report = research.check_project(self.root)
+        self.assertEqual([], report.errors)
+        self.assertFalse((self.root / "curated_manuscript/main.tex").exists())
+        main = self.root / "curated_manuscript/main.tex"
+        main.write_text("\\documentclass{article}\\begin{document}Text.\\end{document}\n")
+        self.assertEqual([], research.check_project(self.root).errors)
+        main.write_text(main.read_text() + "\\bibliography{venue-refs}\n")
+        self.assertIn("human-bibliography-missing", diagnostic_codes(research.check_project(self.root)))
+        (main.parent / "venue-refs.bib").write_text("@article{key, title={Synthetic}}\n")
+        self.assertEqual([], research.check_project(self.root).errors)
+
     def test_conjecture_requires_labeled_open_provenance_and_limitation(self) -> None:
         self.accept_contract()
         claim_id, claim_relative = research.create_artifact(self.root, "claim", "Open conjecture source")
-        results = self.root / "manuscript-ai/sections/results.tex"
+        results = self.root / "results_overview/sections/results.tex"
         results.write_text(
             "\\begin{conjecture}\\label{conj:boundary} Boundary claim.\\end{conjecture}\n"
         )
-        provenance = self.root / "manuscript-ai/PROVENANCE.md"
+        provenance = self.root / "results_overview/PROVENANCE.md"
         marker = "|---|---|---|---|---|"
         row = (
             f"| `conj:boundary` | conjecture | [{claim_id}](../{claim_relative.as_posix()}) | "
@@ -1928,7 +2013,7 @@ class EpistemicGateTests(ProjectFixture):
         self.assertIn("unlabeled-manuscript-item", diagnostic_codes(research.check_project(self.root)))
 
     def test_unprovenanced_theorem_is_rejected(self) -> None:
-        results = self.root / "manuscript-ai/sections/results.tex"
+        results = self.root / "results_overview/sections/results.tex"
         results.write_text(
             "\\begin{theorem}\\label{thm:orphan} Result.\\end{theorem}\n"
             "\\begin{lemma}\\label{thm:orphan} Duplicate.\\end{lemma}\n"
@@ -2007,7 +2092,8 @@ class AdapterTests(ProjectFixture):
         )
 
         contract_row = next(line for line in original.splitlines() if line.startswith("| `substantive` |"))
-        drifted_row = contract_row.replace("`gpt-5.6-sol`", "`gpt-future`", 1)
+        model = research._expected_runtime_mapping(self.root, "codex", "substantive")[0]
+        drifted_row = contract_row.replace(f"`{model}`", "`gpt-future`", 1)
         profiles.write_text(original.replace(contract_row, drifted_row, 1))
         self.assertIn(
             "mapping-history-current-drift",
@@ -2130,7 +2216,8 @@ class AdapterTests(ProjectFixture):
 
     def test_adapter_sync_preflights_all_files_before_writing(self) -> None:
         first = self.root / ".codex/agents/maintenance.toml"
-        first.write_text(first.read_text().replace('model = "gpt-5.6-terra"', 'model = "drift"'))
+        model = research._expected_runtime_mapping(self.root, "codex", "maintenance")[0]
+        first.write_text(first.read_text().replace(f'model = "{model}"', 'model = "drift"'))
         missing = self.root / ".codex/agents/pivotal.toml"
         missing.unlink()
         before = first.read_text()

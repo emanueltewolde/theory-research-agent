@@ -52,7 +52,7 @@ from typing import Callable, Iterable, Iterator, Mapping, Sequence
 from urllib.parse import unquote
 
 
-ADAPTER_SCHEMA = "research-agent-adapter-v2"
+ADAPTER_SCHEMA = "research-agent-adapter-v3"
 # Retain explicitly supported historical schemas here when upgrading, along
 # with a version-aware mapping resolver. Unknown versions never bypass gates.
 SUPPORTED_ADAPTER_SCHEMAS = frozenset({"research-agent-adapter-v1", "research-agent-adapter-v2", ADAPTER_SCHEMA})
@@ -62,7 +62,7 @@ SEMANTIC_PROFILES: tuple[str, ...] = (
 PREFIXES: tuple[str, ...] = (
     "RUN", "DIR", "CLM", "ATT", "REV", "LIT", "EXP", "INB", "RPT"
 )
-MANUSCRIPT_ROOTS: tuple[str, ...] = ("manuscript-ai", "manuscript-human")
+MANUSCRIPT_ROOTS: tuple[str, ...] = ("results_overview", "curated_manuscript")
 
 GUARD_FILENAMES: tuple[str, ...] = (
     "no_git.py", "no_worktree.py", "protect_shared.py", "protect_evidence.py",
@@ -1593,7 +1593,7 @@ def initialize(root: Path) -> list[Path]:
     directories = (
         "templates", "research/directions", "research/claims", "research/attempts", "research/reviews",
         "literature/notes", "literature/searches", "experiments", "runs", "reports",
-        "manuscript-ai/sections", "manuscript-ai/figures", "manuscript-human",
+        "results_overview/sections", "results_overview/figures", "curated_manuscript",
         "runtime", ".codex", ".claude", "tests/fixtures",
     )
     created: list[Path] = []
@@ -1694,15 +1694,16 @@ def _authoritative_markdown_paths(root: Path) -> Iterator[Path]:
     selected = set(_artifact_record_markdown_paths(root))
     for relative in (
         "AGENTS.md", "CLAUDE.md", "README.md", "PROJECT.md", "STATE.md",
-        "OVERVIEW.md", "ARTIFACT_INDEX.md", "manuscript-ai/PROVENANCE.md",
-        "manuscript-human/README.md", "manuscript-human/PROVENANCE.md",
+        "OVERVIEW.md", "ARTIFACT_INDEX.md", "results_overview/PROVENANCE.md",
+        "curated_manuscript/README.md", "curated_manuscript/PROVENANCE.md",
+        "curated_manuscript/WRITING_ORIENTATION.md",
         "runtime/PROFILES.md", ".codex/README.md", ".claude/README.md",
         "templates/README.md", "experiments/README.md", "literature/README.md",
         "literature/notes/README.md", "literature/searches/README.md",
         "research/README.md", "research/attempts/README.md",
         "research/claims/README.md", "research/directions/README.md",
         "research/reviews/README.md", "runs/README.md", "reports/README.md",
-        "manuscript-ai/figures/README.md", "tools/guards/README.md",
+        "results_overview/figures/README.md", "tools/guards/README.md",
     ):
         path = root / relative
         if path.is_file():
@@ -2050,9 +2051,9 @@ def _check_structure(root: Path, report: CheckReport) -> None:
     required_files = (
         "README.md", "AGENTS.md", "CLAUDE.md", "PROJECT.md", "STATE.md", "OVERVIEW.md",
         "ARTIFACT_INDEX.md", "research/DIRECTIONS.md", "research/INBOX.md",
-        "literature/references.bib", "manuscript-ai/main.tex", "manuscript-ai/PROVENANCE.md",
-        "manuscript-human/README.md", "manuscript-human/PROVENANCE.md",
-        "manuscript-human/references.bib", "runtime/PROFILES.md",
+        "literature/references.bib", "results_overview/main.tex", "results_overview/PROVENANCE.md",
+        "curated_manuscript/README.md", "curated_manuscript/PROVENANCE.md",
+        "curated_manuscript/WRITING_ORIENTATION.md", "runtime/PROFILES.md",
         "tools/research.py",
     )
     for relative in required_files:
@@ -4018,11 +4019,11 @@ def _check_bibliography(root: Path, report: CheckReport) -> None:
             if (root / "literature/references.bib").is_file() else (),
         ),
         (
-            root / "manuscript-human",
+            root / "curated_manuscript",
             tuple(
-                path for path in _walk_project_files(root / "manuscript-human")
+                path for path in _walk_project_files(root / "curated_manuscript")
                 if path.suffix.casefold() == ".bib"
-            ) if (root / "manuscript-human").is_dir() else (),
+            ) if (root / "curated_manuscript").is_dir() else (),
         ),
     )
     for diagnostic_path, bibliographies in bibliography_groups:
@@ -4055,7 +4056,7 @@ def _manuscript_tex_sources(root: Path, manuscript_name: str) -> tuple[Path, ...
         path for path in _walk_project_files(manuscript)
         if path.suffix.casefold() == ".tex"
     )
-    if manuscript_name != "manuscript-human":
+    if manuscript_name != "curated_manuscript":
         return all_sources
     main = manuscript / "main.tex"
     if not main.is_file():
@@ -4174,7 +4175,7 @@ def _check_manuscript_inputs(
 
 def _check_human_manuscript_package(root: Path, report: CheckReport) -> None:
     """Validate the optional venue template once it has been installed."""
-    manuscript = root / "manuscript-human"
+    manuscript = root / "curated_manuscript"
     if not manuscript.is_dir():
         return
     installed_tex_sources = tuple(
@@ -4184,7 +4185,7 @@ def _check_human_manuscript_package(root: Path, report: CheckReport) -> None:
     if not installed_tex_sources:
         report.add(
             "info", "human-manuscript-template-pending",
-            "copy the official venue TeX template into manuscript-human/ and verify its unchanged main.tex before authorizing manuscript writing",
+            "copy the official venue TeX template into curated_manuscript/ and verify its unchanged main.tex before authorizing manuscript writing",
             manuscript / "README.md",
         )
         return
@@ -4192,10 +4193,10 @@ def _check_human_manuscript_package(root: Path, report: CheckReport) -> None:
     if not main.is_file():
         report.add(
             "error", "human-manuscript-main-missing",
-            "an installed venue template must expose manuscript-human/main.tex as its build entry point",
+            "an installed venue template must expose curated_manuscript/main.tex as its build entry point",
             manuscript,
         )
-    tex_sources = _manuscript_tex_sources(root, "manuscript-human")
+    tex_sources = _manuscript_tex_sources(root, "curated_manuscript")
 
     manuscript_resolved = manuscript.resolve(strict=False)
     bib_keys: set[str] = set()
@@ -4236,14 +4237,14 @@ def _check_human_manuscript_package(root: Path, report: CheckReport) -> None:
             except ValueError:
                 report.add(
                     "error", "human-bibliography-escape",
-                    f"bibliography target escapes manuscript-human/: `{raw_target}`",
+                    f"bibliography target escapes curated_manuscript/: `{raw_target}`",
                     source,
                 )
                 continue
             if not resolved.is_file():
                 report.add(
                     "error", "human-bibliography-missing",
-                    f"bibliography target does not exist inside manuscript-human/: `{raw_target}`",
+                    f"bibliography target does not exist inside curated_manuscript/: `{raw_target}`",
                     source,
                 )
         for match in re.finditer(
@@ -4258,7 +4259,7 @@ def _check_human_manuscript_package(root: Path, report: CheckReport) -> None:
         if key not in bib_keys:
             report.add(
                 "error", "human-citation-key-missing",
-                f"citation key `{key}` is absent from manuscript-human/ bibliography files",
+                f"citation key `{key}` is absent from curated_manuscript/ bibliography files",
                 source,
             )
 
@@ -4359,10 +4360,6 @@ def _check_provenance(
             report.add("error", "invalid-provenance-row", "established-item row has too few columns", provenance)
             continue
         declared_claim_links = _declared_id_links(cells[claim_column], "CLM")
-        canonical_claim_id = _exact_canonical_linked_id(
-            provenance, cells[claim_column], "CLM", canonical,
-        )
-        claim_id = canonical_claim_id or _id_in(cells[claim_column], "CLM")
         review_ids = re.findall(r"\bREV-\d{4,}\b", cells[review_column])
         label_match = cells[label_column].strip().strip("`")
         manuscript_role = cells[role_column].casefold().strip("` ")
@@ -4403,106 +4400,164 @@ def _check_provenance(
                 f"established item `{label_match}` needs a resolvable link to a CLM/ATT/EXP/LIT evidence artifact",
                 provenance,
             )
-        if len(declared_claim_links) != 1 or canonical_claim_id is None:
-            report.add(
-                "error", "provenance-claim-link-invalid",
-                f"claim cell for `{label_match}` must contain exactly one canonical CLM link",
-                provenance,
+        claim_ids = []
+        for declared_id, destination in declared_claim_links:
+            linked_id = _exact_canonical_linked_id(
+                provenance, f"[{declared_id}]({destination})", "CLM", canonical,
             )
-        if claim_id not in canonical:
-            report.add("error", "provenance-claim-missing", f"provenance row names absent claim {claim_id}", provenance)
-            continue
-        claim_text = canonical[claim_id].read_text(encoding="utf-8")
-        claim_labels = _record_metadata(claim_text)
-        claim_revision = _integer_in(claim_labels.get("claim revision"))
-        current_digest = claim_digest(claim_text).casefold()
-        current_evidence_revision = _integer_in(claim_labels.get("evidence revision"))
-        current_evidence_digest = evidence_digest(claim_text).casefold()
-        claim_contract_revision = _integer_in(claim_labels.get("contract revision"))
-        required_profile = claim_labels.get("required review profile", "").casefold().strip("` ")
-        actual_environments = set(tex_environments.get(label_match, ()))
-        if actual_environments and manuscript_role not in actual_environments:
-            report.add(
-                "error", "manuscript-role-mismatch",
-                f"provenance role `{manuscript_role}` for `{label_match}` does not match LaTeX environment(s) {sorted(actual_environments)}",
-                provenance,
-            )
-        theorem_like = bool(actual_environments.intersection({"theorem", "lemma", "proposition", "corollary"}))
-        claim_kind = claim_labels.get("claim kind", "").casefold()
-        evidence_class = claim_labels.get("evidence class", "").casefold()
-        if theorem_like and (
-            claim_kind not in {"theorem", "lemma", "counterexample", "impossibility"}
-            or not _mathematical_evidence_class(evidence_class)
-        ):
-            report.add(
-                "error", "manuscript-mathematical-role-invalid",
-                f"theorem-like manuscript item `{label_match}` requires a mathematical claim kind and non-empirical-only evidence",
-                provenance,
-            )
-        if claim_labels.get("status", "").casefold() != "validated":
-            report.add("error", "stale-provenance", f"{manuscript_name} provenance uses {claim_id} with status `{claim_labels.get('status', 'missing')}`", provenance)
-        manuscript_section = _section(claim_text, "Manuscript locations")
-        reverse_link_valid = False
-        for destination in re.findall(r"\[[^\]]+\]\(([^)]+)\)", manuscript_section):
-            if destination.casefold().startswith(("http://", "https://")):
-                continue
-            reverse_path = (canonical[claim_id].parent / unquote(destination.split("#", 1)[0]).strip("<>")).resolve(strict=False)
-            try:
-                reverse_path.relative_to(manuscript_root.resolve())
-            except ValueError:
-                continue
-            if reverse_path.exists() and reverse_path.is_file():
-                reverse_link_valid = True
-                break
-        if not label_match or label_match not in manuscript_section or not reverse_link_valid:
-            report.add(
-                "error", "provenance-reverse-location-missing",
-                f"{claim_id} does not link manuscript label `{label_match or 'missing'}` back to a {manuscript_name} artifact from Manuscript locations",
-                canonical[claim_id],
-            )
-        if not review_ids:
-            report.add("error", "provenance-review-missing", f"{manuscript_name} provenance for {claim_id} names no review", provenance)
-        passing_bound_review = False
-        for review_id in review_ids:
-            if review_id not in canonical:
-                report.add("error", "provenance-review-missing", f"{manuscript_name} provenance names absent review {review_id}", provenance)
-                continue
-            review_link_targets = re.findall(r"\[[^\]]+\]\(([^)]+)\)", cells[review_column])
-            if not any(
-                (provenance.parent / unquote(target.split("#", 1)[0]).strip("<>")).resolve(strict=False)
-                    == canonical[review_id].resolve(strict=False)
-                for target in review_link_targets
-            ):
-                report.add("error", "provenance-review-link-invalid", f"review cell for {review_id} is not a resolvable canonical Markdown link", provenance)
-            review_labels = _record_metadata(canonical[review_id].read_text(encoding="utf-8"))
-            review_text = canonical[review_id].read_text(encoding="utf-8")
-            is_bound_pass = (
-                review_labels.get("verdict", "").casefold() in {"pass", "passed"}
-                and review_labels.get("status", "").casefold() == "completed"
-                and review_labels.get("fresh context", "").casefold() in {"yes", "true"}
-                and _review_receipt_valid(review_id, canonical[review_id], review_labels)
-                and _review_fidelity_complete(review_text)
-                and review_labels.get("evidence or proof correct", "").casefold() in {"yes", "true"}
-                and review_labels.get("establishes exact recorded statement", "").casefold() in {"yes", "true"}
-                and review_labels.get("addresses intended project question at stated scope", "").casefold() in {"yes", "true"}
-                and all(
-                    review_labels.get(field, "").casefold() in {"yes", "true"}
-                    for field in ("assumptions accounted for", "quantifier order checked", "scope restrictions checked", "exceptional cases checked")
+            if linked_id is None or linked_id in claim_ids:
+                report.add(
+                    "error", "provenance-claim-link-invalid",
+                    f"claim cell for `{label_match}` has a noncanonical or repeated CLM link",
+                    provenance,
                 )
-                and _id_in(review_labels.get("target claim"), "CLM") == claim_id
-                and _integer_in(review_labels.get("target claim revision")) == claim_revision
-                and review_labels.get("target statement digest", "").casefold() == current_digest
-                and _integer_in(review_labels.get("target evidence revision")) == current_evidence_revision
-                and review_labels.get("target evidence digest", "").casefold() == current_evidence_digest
-                and review_labels.get("requested profile", "").casefold().strip("` ") == required_profile
-                and _integer_in(review_labels.get("contract revision")) == claim_contract_revision
-            )
-            if is_bound_pass:
-                passing_bound_review = True
-        if review_ids and not passing_bound_review:
-            report.add("error", "provenance-review-not-passing", f"no named review passes the current revision and digest of {claim_id}", provenance)
+            else:
+                claim_ids.append(linked_id)
+        if not claim_ids:
+            report.add("error", "provenance-claim-link-invalid",
+                       f"claim cell for `{label_match}` needs canonical CLM links", provenance)
+        for claim_id in claim_ids:
+            if claim_id not in canonical:
+                report.add("error", "provenance-claim-missing", f"provenance row names absent claim {claim_id}", provenance)
+                continue
+            claim_text = canonical[claim_id].read_text(encoding="utf-8")
+            claim_labels = _record_metadata(claim_text)
+            claim_revision = _integer_in(claim_labels.get("claim revision"))
+            current_digest = claim_digest(claim_text).casefold()
+            current_evidence_revision = _integer_in(claim_labels.get("evidence revision"))
+            current_evidence_digest = evidence_digest(claim_text).casefold()
+            claim_contract_revision = _integer_in(claim_labels.get("contract revision"))
+            required_profile = claim_labels.get("required review profile", "").casefold().strip("` ")
+            actual_environments = set(tex_environments.get(label_match, ()))
+            if actual_environments and manuscript_role not in actual_environments:
+                report.add(
+                    "error", "manuscript-role-mismatch",
+                    f"provenance role `{manuscript_role}` for `{label_match}` does not match LaTeX environment(s) {sorted(actual_environments)}",
+                    provenance,
+                )
+            theorem_like = bool(actual_environments.intersection({"theorem", "lemma", "proposition", "corollary"}))
+            claim_kind = claim_labels.get("claim kind", "").casefold()
+            evidence_class = claim_labels.get("evidence class", "").casefold()
+            if theorem_like and (
+                claim_kind not in {"theorem", "lemma", "counterexample", "impossibility"}
+                or not _mathematical_evidence_class(evidence_class)
+            ):
+                report.add(
+                    "error", "manuscript-mathematical-role-invalid",
+                    f"theorem-like manuscript item `{label_match}` requires a mathematical claim kind and non-empirical-only evidence",
+                    provenance,
+                )
+            if claim_labels.get("status", "").casefold() != "validated":
+                report.add("error", "stale-provenance", f"{manuscript_name} provenance uses {claim_id} with status `{claim_labels.get('status', 'missing')}`", provenance)
+            manuscript_section = _section(claim_text, "Manuscript locations")
+            reverse_link_valid = False
+            for destination in re.findall(r"\[[^\]]+\]\(([^)]+)\)", manuscript_section):
+                if destination.casefold().startswith(("http://", "https://")):
+                    continue
+                reverse_path = (canonical[claim_id].parent / unquote(destination.split("#", 1)[0]).strip("<>")).resolve(strict=False)
+                try:
+                    reverse_path.relative_to(manuscript_root.resolve())
+                except ValueError:
+                    continue
+                if reverse_path.exists() and reverse_path.is_file():
+                    reverse_link_valid = True
+                    break
+            if not label_match or label_match not in manuscript_section or not reverse_link_valid:
+                report.add(
+                    "error", "provenance-reverse-location-missing",
+                    f"{claim_id} does not link manuscript label `{label_match or 'missing'}` back to a {manuscript_name} artifact from Manuscript locations",
+                    canonical[claim_id],
+                )
+            if not review_ids:
+                report.add("error", "provenance-review-missing", f"{manuscript_name} provenance for {claim_id} names no review", provenance)
+            passing_bound_review = False
+            for review_id in review_ids:
+                if review_id not in canonical:
+                    report.add("error", "provenance-review-missing", f"{manuscript_name} provenance names absent review {review_id}", provenance)
+                    continue
+                review_link_targets = re.findall(r"\[[^\]]+\]\(([^)]+)\)", cells[review_column])
+                if not any(
+                    (provenance.parent / unquote(target.split("#", 1)[0]).strip("<>")).resolve(strict=False)
+                        == canonical[review_id].resolve(strict=False)
+                    for target in review_link_targets
+                ):
+                    report.add("error", "provenance-review-link-invalid", f"review cell for {review_id} is not a resolvable canonical Markdown link", provenance)
+                review_labels = _record_metadata(canonical[review_id].read_text(encoding="utf-8"))
+                review_text = canonical[review_id].read_text(encoding="utf-8")
+                is_bound_pass = (
+                    review_labels.get("verdict", "").casefold() in {"pass", "passed"}
+                    and review_labels.get("status", "").casefold() == "completed"
+                    and review_labels.get("fresh context", "").casefold() in {"yes", "true"}
+                    and _review_receipt_valid(review_id, canonical[review_id], review_labels)
+                    and _review_fidelity_complete(review_text)
+                    and review_labels.get("evidence or proof correct", "").casefold() in {"yes", "true"}
+                    and review_labels.get("establishes exact recorded statement", "").casefold() in {"yes", "true"}
+                    and review_labels.get("addresses intended project question at stated scope", "").casefold() in {"yes", "true"}
+                    and all(
+                        review_labels.get(field, "").casefold() in {"yes", "true"}
+                        for field in ("assumptions accounted for", "quantifier order checked", "scope restrictions checked", "exceptional cases checked")
+                    )
+                    and _id_in(review_labels.get("target claim"), "CLM") == claim_id
+                    and _integer_in(review_labels.get("target claim revision")) == claim_revision
+                    and review_labels.get("target statement digest", "").casefold() == current_digest
+                    and _integer_in(review_labels.get("target evidence revision")) == current_evidence_revision
+                    and review_labels.get("target evidence digest", "").casefold() == current_evidence_digest
+                    and review_labels.get("requested profile", "").casefold().strip("` ") == required_profile
+                    and _integer_in(review_labels.get("contract revision")) == claim_contract_revision
+                )
+                if is_bound_pass:
+                    passing_bound_review = True
+            if review_ids and not passing_bound_review:
+                report.add("error", "provenance-review-not-passing", f"no named review passes the current revision and digest of {claim_id}", provenance)
         if label_match and label_match not in tex_labels and label_match.casefold() not in {"label", "manuscript label"}:
             report.add("error", "provenance-label-missing", f"LaTeX label `{label_match}` is not present in {manuscript_name} sources", provenance)
+
+    imported_labels: set[str] = set()
+    if _heading_count(provenance_text, "Imported literature items"):
+        if _heading_count(provenance_text, "Imported literature items") != 1:
+            report.add("error", "invalid-imported-provenance-table",
+                       "imported literature section must not be repeated", provenance)
+        try:
+            imported_start, imported_end = _section_bounds(lines, "Imported literature items")
+            imported_table = _find_table(lines, imported_start, imported_end)
+            columns = [_column(imported_table.headers, (name,)) for name in (
+                "LaTeX label", "Manuscript role", "Literature note",
+                "Source locator", "Application and scope", "Status",
+            )]
+            for _, cells in imported_table.rows:
+                if max(columns) >= len(cells):
+                    report.add("error", "invalid-imported-provenance-row",
+                               "imported row has too few columns", provenance)
+                    continue
+                label, role, note, locator, scope, status = [cells[c].strip().strip("`") for c in columns]
+                if not label or label in imported_labels | established_labels | provisional_labels:
+                    report.add("error", "conflicting-provenance-status",
+                               f"imported label `{label}` is missing, repeated, or classified elsewhere", provenance)
+                imported_labels.add(label)
+                if label not in tex_labels:
+                    report.add("error", "provenance-label-missing",
+                               f"imported LaTeX label `{label}` is absent from sources", provenance)
+                actual_roles = set(tex_environments.get(label, ()))
+                if (actual_roles and role not in actual_roles) or role == "conjecture":
+                    report.add("error", "manuscript-role-mismatch",
+                               f"imported label `{label}` has incompatible role `{role}`", provenance)
+                note_id = _exact_canonical_linked_id(provenance, note, "LIT", canonical)
+                if note_id is None:
+                    report.add("error", "imported-literature-source-invalid",
+                               f"`{label}` needs one canonical LIT source-note link", provenance)
+                else:
+                    metadata = _record_metadata(canonical[note_id].read_text(encoding="utf-8"))
+                    if metadata.get("record kind", "").casefold() != "literature note":
+                        report.add("error", "imported-literature-source-invalid",
+                                   f"{note_id} is not a source note", provenance)
+                    if metadata.get("status", "").casefold() != "completed":
+                        report.add("error", "stale-provenance",
+                                   f"imported source {note_id} is not completed/current", provenance)
+                if status.casefold() != "imported" or _unfinished_value(locator) or _unfinished_value(scope):
+                    report.add("error", "imported-literature-detail-missing",
+                               f"`{label}` requires Status imported, a precise locator, and applicability/scope", provenance)
+        except ResearchError as error:
+            report.add("error", "invalid-imported-provenance-table", str(error), provenance)
 
     tracked_environments = {"theorem", "lemma", "proposition", "corollary", "conjecture", "figure", "table"}
     for tex_path in _manuscript_tex_sources(root, manuscript_name):
@@ -4524,7 +4579,9 @@ def _check_provenance(
                         report.add("error", "unprovenanced-provisional-item", f"conjecture label `{label}` is absent from the open/provisional provenance table", tex_path)
                     if label in established_labels:
                         report.add("error", "conjecture-marked-established", f"conjecture label `{label}` is incorrectly marked established", tex_path)
-                elif label not in established_labels:
+                elif label not in established_labels | imported_labels and not (
+                    environment in {"figure", "table"} and label in provisional_labels
+                ):
                     report.add("error", "unprovenanced-manuscript-item", f"established {environment} label `{label}` is absent from the provenance table", tex_path)
 
 
@@ -4976,6 +5033,7 @@ ADAPTER_INVENTORY: Mapping[str, tuple[str, ...]] = {
         ".codex/agents/substantive.toml", ".codex/agents/deep.toml",
         ".codex/agents/pivotal.toml", ".codex/agents/verifier.toml",
         ".codex/agents/verifier_deep.toml", ".codex/agents/verifier_pivotal.toml",
+        ".codex/agents/writer.toml",
     ),
     "claude": (
         ".claude/settings.json", ".claude/README.md",
@@ -4983,6 +5041,7 @@ ADAPTER_INVENTORY: Mapping[str, tuple[str, ...]] = {
         ".claude/agents/substantive.md", ".claude/agents/deep.md",
         ".claude/agents/pivotal.md", ".claude/agents/verifier.md",
         ".claude/agents/verifier_deep.md", ".claude/agents/verifier_pivotal.md",
+        ".claude/agents/writer.md",
     ),
 }
 
@@ -5739,7 +5798,7 @@ def check_adapters(root: Path, runtime: str) -> CheckReport:
     role_profiles = {
         "maintenance": "maintenance", "coordinator": "coordinator", "substantive": "substantive",
         "deep": "deep", "pivotal": "pivotal", "verifier": "substantive",
-        "verifier_deep": "deep", "verifier_pivotal": "pivotal",
+        "verifier_deep": "deep", "verifier_pivotal": "pivotal", "writer": "substantive",
     }
     for role, expected_profile in role_profiles.items():
         if expected_profile not in expected_mappings:
@@ -5915,10 +5974,10 @@ def doctor(root: Path, runtime: str, build_paper: bool = False) -> CheckReport:
                 source_manuscript = root / manuscript_name
                 source_main = source_manuscript / "main.tex"
                 if not source_main.exists():
-                    if manuscript_name == "manuscript-human":
+                    if manuscript_name == "curated_manuscript":
                         report.add(
                             "info", "human-manuscript-build-skipped",
-                            "official venue template has not yet supplied manuscript-human/main.tex",
+                            "official venue template has not yet supplied curated_manuscript/main.tex",
                             source_manuscript / "README.md",
                         )
                     continue
@@ -5926,7 +5985,7 @@ def doctor(root: Path, runtime: str, build_paper: bool = False) -> CheckReport:
                     temporary_root = Path(temporary_root_text)
                     temporary_manuscript = temporary_root / manuscript_name
                     shutil.copytree(source_manuscript, temporary_manuscript)
-                    if manuscript_name == "manuscript-ai":
+                    if manuscript_name == "results_overview":
                         temporary_literature = temporary_root / "literature"
                         temporary_literature.mkdir()
                         references = root / "literature/references.bib"
@@ -5997,7 +6056,7 @@ def adapters(root: Path, runtime: str, check_only: bool) -> CheckReport:
             role_profiles = {
                 "maintenance": "maintenance", "coordinator": "coordinator", "substantive": "substantive",
                 "deep": "deep", "pivotal": "pivotal", "verifier": "substantive",
-                "verifier_deep": "deep", "verifier_pivotal": "pivotal",
+                "verifier_deep": "deep", "verifier_pivotal": "pivotal", "writer": "substantive",
             }
             for role, profile in role_profiles.items():
                 if profile not in mappings:

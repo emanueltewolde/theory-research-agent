@@ -12,7 +12,7 @@ hooks:
           command: 'python3 "$CLAUDE_PROJECT_DIR/tools/guards/protect_shared.py" --role pivotal --hook claude'
           timeout: 10
 ---
-<!-- Adapter schema: research-agent-adapter-v1 -->
+<!-- Adapter schema: research-agent-adapter-v3 -->
 
 This is a pivotal research assignment. Confirm that the runtime accepted the
 requested `opus` family and `max` effort before counting the assignment as

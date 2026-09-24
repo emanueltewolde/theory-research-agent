@@ -56,8 +56,8 @@ SCAFFOLD_DIRECTORIES = (
     "experiments",
     "runs",
     "reports",
-    "manuscript-ai",
-    "manuscript-human",
+    "results_overview",
+    "curated_manuscript",
     "runtime",
     "tools/guards",
 )
@@ -407,11 +407,11 @@ Only this task packet.
 - **Task:** [{task_id}](TASK.md)
 - **Requested profile:** substantive
 - **Resolved provider:** OpenAI Codex
-- **Resolved model:** {'unavailable' if runtime_failure else 'gpt-5.6-sol'}
-- **Resolved effort:** {'unavailable' if runtime_failure else 'high'}
+- **Resolved model:** {'unavailable' if runtime_failure else research._expected_runtime_mapping(self.root, 'codex', 'substantive')[0]}
+- **Resolved effort:** {'unavailable' if runtime_failure else research._expected_runtime_mapping(self.root, 'codex', 'substantive')[1]}
 - **Runtime mode:** synthetic acceptance fixture
 - **Runtime version:** synthetic-runtime-1.0
-- **Adapter version:** research-agent-adapter-v1
+- **Adapter version:** {research.ADAPTER_SCHEMA}
 - **Fresh context:** yes
 - **Status:** {receipt_status}
 - **Started:** 2026-08-17T12:00:00Z
@@ -981,14 +981,14 @@ Synthetic, filesystem-only acceptance record; no provider was contacted.
         _replace_label(claim_path, "Status", "validated")
         _set_registry_status(self.root, claim_id, "validated")
 
-        results = self.root / "manuscript-ai/sections/results.tex"
+        results = self.root / "results_overview/sections/results.tex"
         results.write_text(
             results.read_text(encoding="utf-8")
             + "\n\\begin{theorem}\\label{thm:provenance-canary}"
             + "A synthetic finite statement holds.\\end{theorem}\n",
             encoding="utf-8",
         )
-        provenance = self.root / "manuscript-ai/PROVENANCE.md"
+        provenance = self.root / "results_overview/PROVENANCE.md"
         provenance_text = provenance.read_text(encoding="utf-8")
         separator = "|---|---|---|---|---|---|"
         row = (
@@ -1004,7 +1004,7 @@ Synthetic, filesystem-only acceptance record; no provider was contacted.
         _replace_section(
             claim_path,
             "Manuscript locations",
-            "- [`thm:provenance-canary`](../../manuscript-ai/PROVENANCE.md) — established theorem entry.",
+            "- [`thm:provenance-canary`](../../results_overview/PROVENANCE.md) — established theorem entry.",
         )
 
         before = research.check_project(self.root)
@@ -1451,13 +1451,13 @@ Synthetic, filesystem-only acceptance record; no provider was contacted.
         _replace_label(claim, "Status", "validated")
         _set_registry_status(self.root, claim_id, "validated")
 
-        results = self.root / "manuscript-ai/sections/results.tex"
+        results = self.root / "results_overview/sections/results.tex"
         results.write_text(
             results.read_text(encoding="utf-8")
             + "\n\\begin{theorem}\\label{thm:pivotal-canary}Pivotal claim.\\end{theorem}\n",
             encoding="utf-8",
         )
-        provenance = self.root / "manuscript-ai/PROVENANCE.md"
+        provenance = self.root / "results_overview/PROVENANCE.md"
         row = (
             "| `thm:pivotal-canary` | theorem | "
             f"[{claim_id}](../{claim_relative.as_posix()}) | "
@@ -1479,7 +1479,7 @@ Synthetic, filesystem-only acceptance record; no provider was contacted.
         _replace_section(
             claim,
             "Manuscript locations",
-            "- [`thm:pivotal-canary`](../../manuscript-ai/PROVENANCE.md) — proposed theorem entry pending pivotal review.",
+            "- [`thm:pivotal-canary`](../../results_overview/PROVENANCE.md) — proposed theorem entry pending pivotal review.",
         )
 
         report = research.check_project(self.root)

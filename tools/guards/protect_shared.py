@@ -19,7 +19,7 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 
-ADAPTER_SCHEMA = "research-agent-adapter-v2"
+ADAPTER_SCHEMA = "research-agent-adapter-v3"
 BLOCK_EXIT = 2
 
 _PROTECTED_EXACT = {
@@ -35,13 +35,13 @@ _PROTECTED_PREFIXES = (
     ".agents/",
     ".claude/",
     ".codex/",
-    "manuscript-ai/",
-    "manuscript-human/",
+    "results_overview/",
+    "curated_manuscript/",
     "reports/",
     "runtime/",
     "tools/guards/",
 )
-_PATCH_PATH = re.compile(r"^\*\*\* (?:Add|Update|Delete) File:\s*(.+?)\s*$", re.MULTILINE)
+_PATCH_PATH = re.compile(r"^\*\*\* (?:(?:Add|Update|Delete) File|Move to):\s*(.+?)\s*$", re.MULTILINE)
 _READ_ONLY_SHELL_TOOLS = {
     "cat",
     "cmp",
@@ -72,8 +72,37 @@ _READ_ONLY_SHELL_TOOLS = {
 _FOCUSED_SAFE_RESEARCH_ACTIONS = {"check", "doctor"}
 
 
+def _protected_paths(role: str) -> tuple[set[str], tuple[str, ...]]:
+    exacts = set(_PROTECTED_EXACT)
+    prefixes = _PROTECTED_PREFIXES
+    if role == "verifier":
+        prefixes += ("research/claims/",)
+    elif role == "writer":
+        exacts.update({"AGENTS.md", "CLAUDE.md", "README.md", "curated_manuscript/WRITING_ORIENTATION.md"})
+        prefixes = tuple(p for p in prefixes if p != "curated_manuscript/")
+        prefixes += ("research/", "literature/", "experiments/", "docs/", "templates/", "tools/")
+    return exacts, prefixes
+
+
+def _writer_writable(path: str) -> bool:
+    # Coarse role boundary only. The task packet further restricts exact files.
+    if path.startswith("curated_manuscript/"):
+        return path != "curated_manuscript/writing_orientation.md"
+    return bool(re.fullmatch(r"runs/run-\d{4,}/tasks/t\d{2,}/(?!task\.md$).+", path))
+
+
 def _looks_like_project_root(path: Path) -> bool:
     return (path / "ARTIFACT_INDEX.md").exists() and (path / "AGENTS.md").exists()
+
+
+def _writer_shell_path(path: str, cwd: str | None) -> bool:
+    # Token extraction also returns command names and prose, which are not targets.
+    candidate = Path(path).expanduser()
+    if not candidate.is_absolute():
+        candidate = Path(cwd or os.getcwd()) / candidate
+    return candidate.exists() or (
+        not any(c.isspace() for c in path) and any(c in path for c in "/\\.")
+    )
 
 
 def _project_root(cwd: str | None, target: Path | None = None) -> Path:
@@ -114,18 +143,18 @@ def _resolved_canonical(path: str, cwd: str | None = None) -> str:
         return absolute.as_posix()
 
 
-def _protected_symlink_target(path: str, cwd: str | None, verifier: bool = False) -> bool:
+def _protected_symlink_target(path: str, cwd: str | None, role: str = "focused") -> bool:
     base = Path(cwd or os.getcwd()).resolve(strict=False)
     candidate = Path(path.strip().strip("'\"")).expanduser()
     absolute = (candidate if candidate.is_absolute() else base / candidate).resolve(strict=False)
     root = _project_root(cwd)
     links: list[Path] = []
-    exacts = set(_PROTECTED_EXACT)
+    exacts, prefixes = _protected_paths(role)
     for exact in exacts:
         item = root / exact
         if item.is_symlink():
             links.append(item)
-    prefixes = list(_PROTECTED_PREFIXES) + (["research/claims/"] if verifier else [])
+
     for prefix in prefixes:
         directory = root / prefix.rstrip("/")
         if directory.is_symlink():
@@ -139,24 +168,30 @@ def _protected_symlink_target(path: str, cwd: str | None, verifier: bool = False
     )
 
 
-def is_protected(path: str, cwd: str | None = None) -> bool:
+def is_protected(path: str, cwd: str | None = None, role: str = "focused") -> bool:
+    exacts, prefixes = _protected_paths(role)
     for normalized in {_canonical(path, cwd), _resolved_canonical(path, cwd)}:
         folded = normalized.casefold()
-        if folded in {value.casefold() for value in _PROTECTED_EXACT}:
+        if role == "writer" and not _writer_writable(folded):
+            return True
+        if folded in {value.casefold() for value in exacts}:
             return True
         if any(
             folded == prefix.casefold().rstrip("/") or folded.startswith(prefix.casefold())
-            for prefix in _PROTECTED_PREFIXES
+            for prefix in prefixes
         ):
             return True
-    return _protected_symlink_target(path, cwd)
+    return _protected_symlink_target(path, cwd, role)
 
 
-def _is_protected_ancestor(path: str, cwd: str | None, verifier: bool) -> bool:
+def _is_protected_ancestor(path: str, cwd: str | None, role: str) -> bool:
     normalized = _canonical(path, cwd).casefold().rstrip("/")
-    targets = {value.casefold() for value in _PROTECTED_EXACT}
-    targets.update(prefix.casefold().rstrip("/") for prefix in _PROTECTED_PREFIXES)
-    if verifier:
+    exacts, prefixes = _protected_paths(role)
+    if role == "writer" and not _writer_writable(normalized):
+        return True
+    targets = {value.casefold() for value in exacts}
+    targets.update(prefix.casefold().rstrip("/") for prefix in prefixes)
+    if role == "verifier":
         targets.add("research/claims")
     if normalized in {"", "."}:
         return True
@@ -407,13 +442,16 @@ def _research_cli_invocations(
     return found
 
 
-def _explicit_protected_path_in_command(command: str, cwd: str | None = None) -> str | None:
+def _explicit_protected_path_in_command(command: str, cwd: str | None = None, role: str = "focused") -> str | None:
     normalized = command.replace("\\", "/")
     for token in re.split(r"\s+", command):
         value = token.strip("'\"`(){}[],:;|<>")
-        if value and is_protected(value, cwd):
+        if role == "writer" and not _writer_shell_path(value, cwd):
+            continue
+        if value and is_protected(value, cwd, role):
             return _canonical(value, cwd)
-    candidates = sorted(_PROTECTED_EXACT | set(_PROTECTED_PREFIXES), key=len, reverse=True)
+    exacts, prefixes = _protected_paths(role)
+    candidates = sorted(exacts | set(prefixes), key=len, reverse=True)
     for candidate in candidates:
         pattern = rf"(?<![A-Za-z0-9_.-])(?:\./)?{re.escape(candidate)}"
         if re.search(pattern, normalized, re.IGNORECASE):
@@ -422,7 +460,7 @@ def _explicit_protected_path_in_command(command: str, cwd: str | None = None) ->
 
 
 def _bash_may_modify(
-    command: str, protected_path: str, cwd: str | None, verifier: bool
+    command: str, protected_path: str, cwd: str | None, role: str
 ) -> bool:
     """Associate a protected path with its shell segment before classifying it."""
 
@@ -454,7 +492,7 @@ def _bash_may_modify(
             value = destination[0] or destination[1]
             if (
                 _canonical(value, cwd).casefold().rstrip("/") == target
-                or _is_protected_ancestor(value, cwd, verifier)
+                or _is_protected_ancestor(value, cwd, role)
             ):
                 return True
         normalized = segment.replace("\\", "/")
@@ -479,7 +517,7 @@ def _bash_may_modify(
                     command_body = " ".join(tokens[index + 2:])
                     break
             if command_body is not None:
-                if _bash_may_modify(command_body, protected_path, cwd, verifier):
+                if _bash_may_modify(command_body, protected_path, cwd, role):
                     return True
                 continue
         if executable in {"cp", "install", "copy-item", "tee", "tee-object", "out-file"}:
@@ -538,17 +576,17 @@ def protected_target(payload: dict[str, object], role: str = "focused") -> str |
             workdir_path = Path(cwd or os.getcwd()) / workdir_path
         cwd = str(workdir_path.resolve(strict=False))
 
-    verifier = role.casefold() == "verifier"
+    role = role.casefold()
 
     def protected(path: str) -> bool:
         normalized = _canonical(path, cwd)
-        return is_protected(path, cwd) or (
-            verifier
+        return is_protected(path, cwd, role) or (
+            role == "verifier"
             and (
                 normalized.casefold() == "research/claims"
                 or normalized.casefold().startswith("research/claims/")
             )
-        ) or _protected_symlink_target(path, cwd, verifier)
+        ) or _protected_symlink_target(path, cwd, role)
 
     for key in ("file_path", "path", "target_path", "notebook_path"):
         value = tool_input.get(key)
@@ -580,19 +618,21 @@ def protected_target(payload: dict[str, object], role: str = "focused") -> str |
                 return _canonical(path, cwd)
     if shell_tool:
         for candidate in _command_path_candidates(command, cwd):
-            if protected(candidate) or _is_protected_ancestor(candidate, cwd, verifier):
+            if role == "writer" and not _writer_shell_path(candidate, cwd):
+                continue
+            if protected(candidate) or _is_protected_ancestor(candidate, cwd, role):
                 normalized = _canonical(candidate, cwd)
-                if not _bash_may_modify(command, candidate, cwd, verifier):
+                if not _bash_may_modify(command, candidate, cwd, role):
                     continue
                 return normalized
-    explicit = _explicit_protected_path_in_command(command, cwd)
-    if explicit is None and verifier:
+    explicit = _explicit_protected_path_in_command(command, cwd, role)
+    if explicit is None and role == "verifier":
         normalized_command = command.replace("\\", "/")
         if re.search(r"(?<![A-Za-z0-9_.-])(?:\./)?research/claims(?:/|\b)", normalized_command):
             explicit = "research/claims"
     if explicit is None:
         return None
-    if shell_tool and not _bash_may_modify(command, explicit, cwd, verifier):
+    if shell_tool and not _bash_may_modify(command, explicit, cwd, role):
         return None
     return explicit
 
@@ -609,8 +649,8 @@ def _self_test() -> int:
             "tool_input": {"file_path": "../../../../STATE.md"},
         },
         {"tool_name": "Edit", "tool_input": {"file_path": str(Path.cwd() / "STATE.md")}},
-        {"tool_name": "Edit", "tool_input": {"file_path": "manuscript-ai/main.tex"}},
-        {"tool_name": "Edit", "tool_input": {"file_path": "manuscript-human/main.tex"}},
+        {"tool_name": "Edit", "tool_input": {"file_path": "results_overview/main.tex"}},
+        {"tool_name": "Edit", "tool_input": {"file_path": "curated_manuscript/main.tex"}},
         {"tool_name": "Write", "tool_input": {"file_path": "reports/RPT-0001.md"}},
         {"tool_name": "Write", "tool_input": {"file_path": "literature/references.bib"}},
         {

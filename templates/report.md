@@ -41,15 +41,16 @@
 
 ## Manuscript progress
 
-- **AI draft source:** [`manuscript-ai/main.tex`](../manuscript-ai/main.tex)
-- **Human manuscript:** template not installed or not authorized
+- **Results overview source:** [`results_overview/main.tex`](../results_overview/main.tex)
+- **Curated manuscript:** template not installed or not authorized
 - **Latest PDFs:** unavailable or not built
-- **Mature sections:** none
+- **Coverage / last content refresh:** state each document's scope independently
+- **Document impact since the previous milestone:** none
 - **Known stale provenance:** none
 
 ## Consequential human decisions
 
-- [Link alignment items, give the safe horizon, or write `none`.]
+- [Link alignment items, give the safe horizon and useful options with consequences, or write `none`.]
 
 ## Recommended next actions
 

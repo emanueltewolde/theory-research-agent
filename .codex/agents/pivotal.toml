@@ -1,4 +1,4 @@
-# Adapter schema: research-agent-adapter-v2
+# Adapter schema: research-agent-adapter-v3
 name = "pivotal"
 description = "Ultra-effort research role for important theorem bottlenecks, potential main theorems, claimed breakthroughs, or project-shaping forks."
 model = "gpt-6-astra"
