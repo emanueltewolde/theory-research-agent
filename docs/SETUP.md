@@ -128,8 +128,9 @@ git merge --ff-only upstream/main
 ```
 
 If the fast-forward fails, stop and inspect the divergence; do not reset or
-force-push to make it fit. Run the [full template checks](../CONTRIBUTING.md#checks)
-here on the still-blank `main` branch. Once they pass, continue:
+force-push to make it fit. Run the [template test suite](../README.md#tests),
+`python3 tools/research.py check`, and both `adapters --check` commands here on
+the still-blank `main` branch. Once they pass, continue:
 
 ```sh
 git push origin main

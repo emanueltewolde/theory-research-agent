@@ -257,8 +257,7 @@ provenance/backlinks. No automatic content migration is supplied.
   evidence.
 
 Hooks complement runtime permissions; they are not an operating-system security
-boundary. See [runtime safeguards and limits](docs/RUNTIMES.md#no-git-invariant)
-and the [security policy](SECURITY.md).
+boundary. See [runtime safeguards and limits](docs/RUNTIMES.md#no-git-invariant).
 
 ## Customization and maintenance
 
@@ -285,8 +284,3 @@ The tests never call Git and use temporary fixture directories for mutation.
 Python 3.11+ also runs the TOML-parser tests, which are skipped on 3.10.
 For a populated research branch, use `check`, adapter checks, and `doctor`.
 GitHub Actions runs the template checks without model credentials or paid calls.
-
-For framework changes, see [contributing](CONTRIBUTING.md) and the
-[changelog](CHANGELOG.md). Maintainers preparing a public release should follow
-[publishing from private development](docs/PUBLISHING.md); research sessions
-do not need to read it.
