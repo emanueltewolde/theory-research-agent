@@ -44,18 +44,13 @@ One context may perform several responsibilities sequentially. Focused delegatio
 
 ## Human initialization
 
-1. Run `python3 tools/research.py init` to complete missing scaffold structure,
-   then fill [`PROJECT.md`](../PROJECT.md). In a copied template, the scaffold
-   is already present and `init` makes no research-content changes.
-2. Specify whether the project seeks a definite answer, exploratory findings, or both.
-3. Define the objective, formal model, central terminology, permitted assumptions, exclusions, success criteria, deliverable, and operational constraints.
-4. Record consequential ambiguities rather than hiding them inside prose.
-5. Review and explicitly accept contract revision 1.
-6. Select provider mappings for the semantic profiles described in [`RUNTIMES.md`](RUNTIMES.md).
-7. Run `python3 tools/research.py doctor --runtime codex` or `--runtime claude`.
-8. Start the chosen runtime in the project root and ask it to “continue the research.”
-
-Initialization must not install dependencies, initialize version control, or overwrite an initialized project without explicit human confirmation.
+Use the [setup guide](SETUP.md#initialize-the-project-together), either manually
+or in conversation with the agent. It covers the contract, explicit human
+acceptance, initial state and overview, and validation before research begins.
+The agent may help formulate precise or exploratory objectives and draft the
+records; it must not accept its own proposal on the human's behalf.
+Initialization does not install dependencies, operate version control, begin
+research, or overwrite an already initialized project.
 
 ## Resume protocol
 

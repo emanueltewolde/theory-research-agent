@@ -15,6 +15,8 @@ When the human accepts the completed contract, set `Contract status` to
 the matching contract revision in `STATE.md`, `research/DIRECTIONS.md`, and
 `research/INBOX.md`. Later accepted revisions retain status `accepted`;
 proposed edits remain proposals until the human approves them.
+For agent-assisted drafting and the complete acceptance checklist, including
+the initial overview, see [project setup](docs/SETUP.md#initialize-the-project-together).
 
 ## Objective and intended contribution
 

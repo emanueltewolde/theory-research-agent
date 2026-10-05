@@ -37,9 +37,10 @@ None.
 
 ## Recommended next action
 
-Run `python3 tools/research.py init` to confirm the scaffold, fill `PROJECT.md`,
-review the result, and explicitly approve contract revision 1. Then update this
-state to point to that accepted revision before allocating research artifacts.
+Follow [project setup](docs/SETUP.md#initialize-the-project-together) to draft
+`PROJECT.md` with the human and obtain explicit approval of contract revision 1.
+Prepare the matching overview and control records, then update this state last
+before allocating research artifacts.
 
 ## Useful alternatives
 

@@ -4,6 +4,10 @@ __pycache__/
 .venv/
 venv/
 .research-id-allocation.lock
+# Local secrets are never part of the reusable template.
+.env
+.env.*
+!.env.example
 # Build outputs only; figure and source PDFs remain visible.
 results_overview/*.aux
 results_overview/*.bbl

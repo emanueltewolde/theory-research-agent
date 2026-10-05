@@ -17,33 +17,29 @@ boundaries while leaving decomposition and detailed reasoning to the models.
 
 ## Quick start
 
-1. Copy this template into a new project directory.
-2. Complete any missing scaffold directories and the artifact index:
+You need Python 3.10+ (3.11+ recommended), Codex or Claude Code with access to
+your chosen models, and optionally an existing TeX installation with `latexmk`.
+The Python tools use only the standard library; there is no package install step.
+
+1. Follow [project creation](docs/SETUP.md#create-a-project-with-an-update-path).
+   Fork for public work, or use the history-preserving clone route for a private
+   research project. Both allow you to adopt future framework updates when you
+   choose. Include the hidden `.codex/` and `.claude/` directories.
+2. From the new project root, complete any missing scaffold structure:
 
    ```sh
    python3 tools/research.py init
    ```
 
-   `init` is deliberately non-interactive and non-overwriting. Next, edit
-   [`PROJECT.md`](PROJECT.md) and answer the high-value setup questions already
-   represented by its headings. Do not begin substantive research until the
-   intended model, assumptions, scope, and success criteria are explicit.
-3. Review the completed contract and explicitly accept it as revision 1. Set
-   the matching contract revision in `STATE.md`, `research/DIRECTIONS.md`, and
-   `research/INBOX.md`; `check` will flag any missed control record. Give
-   `STATE.md` its first operational revision and replace every initialization
-   prompt with the accepted objective, portfolio/blocker/question snapshot,
-   in-flight work, useful alternatives, a concrete next action, and concrete
-   strategic-review and overview-refresh triggers. Explicit `None.` is valid
-   for an empty category such as strongest validated results. The human, not
-   an agent, is authoritative for consequential choices.
-4. Inspect and, if needed, edit the replaceable model mappings in
-   [`runtime/PROFILES.md`](runtime/PROFILES.md).
-5. The basic [results overview](results_overview/main.tex) is ready to populate.
-   When you want a selective paper, follow
-   [curated manuscript setup](curated_manuscript/README.md): install the venue
-   template and fill its writing orientation. This is optional during research.
-6. Validate the workspace and selected runtime:
+3. Start your runtime in that same directory, using a local checkout rather
+   than a worktree. Follow [Codex activation](.codex/README.md#activation) or
+   [Claude Code activation](.claude/README.md#activation), including hook review.
+   Review [model mappings](runtime/PROFILES.md) and choose a cost envelope.
+4. [Set up the project together with the agent](docs/SETUP.md#initialize-the-project-together).
+   The copy-paste setup prompt asks the agent to help clarify your question,
+   draft `PROJECT.md`, and prepare the initial records **after your approval**.
+   You can also follow the same checklist manually. Setup does not start research.
+5. Validate the accepted workspace and selected runtime:
 
    ```sh
    python3 tools/research.py check
@@ -51,18 +47,21 @@ boundaries while leaving decomposition and detailed reasoning to the models.
    # or: python3 tools/research.py doctor --runtime claude
    ```
 
-7. Start Codex or Claude Code in the project root and say:
+6. When ready, say:
 
    > Continue the research.
 
-8. Review the run handoff after each substantial session. Every two or three
+7. Review the run handoff after each substantial session. Every two or three
    substantial runs—or sooner at a milestone—review [`OVERVIEW.md`](OVERVIEW.md)
    and the results overview.
-9. If you use version control, perform checkpoints yourself or through trusted
-   external automation. Research agents in this workspace must not run Git.
+8. Checkpoint work yourself or through trusted external automation. Research
+   agents must not run Git. See [optional framework updates](docs/SETUP.md#adopt-framework-updates-when-you-choose).
 
 The initializer never installs dependencies, initializes version control,
 accesses the network, or dispatches an agent.
+The basic results overview is ready to populate. Setting up a venue template
+for the [curated manuscript](curated_manuscript/README.md) can wait until you
+want to write a paper.
 
 ## The three files to know first
 
@@ -126,6 +125,8 @@ to the exact statement and evidence revisions/digests and separately asks:
 Empirical success is evidence for an empirical claim, not a proof. A valid
 counterexample or impossibility result is a successful resolution, not a
 failed proof attempt.
+Here, validated means the recorded review requirements were met; it does not
+mean a proof assistant checked the mathematics or that correctness is guaranteed.
 
 ### Integrate and hand off
 
@@ -255,6 +256,10 @@ provenance/backlinks. No automatic content migration is supplied.
 - Experiment code must not conceal expected conclusions or silently rewrite
   evidence.
 
+Hooks complement runtime permissions; they are not an operating-system security
+boundary. See [runtime safeguards and limits](docs/RUNTIMES.md#no-git-invariant)
+and the [security policy](SECURITY.md).
+
 ## Customization and maintenance
 
 - Change provider/model names only in runtime profile and adapter files. Do
@@ -269,10 +274,19 @@ provenance/backlinks. No automatic content migration is supplied.
 
 ## Tests
 
-Run the complete filesystem-only test suite with:
+Run the complete filesystem-only test suite in an uninitialized template
+checkout (the template-only `main` branch in the recommended setup):
 
 ```sh
 python3 -m unittest discover -s tests -v
 ```
 
 The tests never call Git and use temporary fixture directories for mutation.
+Python 3.11+ also runs the TOML-parser tests, which are skipped on 3.10.
+For a populated research branch, use `check`, adapter checks, and `doctor`.
+GitHub Actions runs the template checks without model credentials or paid calls.
+
+For framework changes, see [contributing](CONTRIBUTING.md) and the
+[changelog](CHANGELOG.md). Maintainers preparing a public release should follow
+[publishing from private development](docs/PUBLISHING.md); research sessions
+do not need to read it.

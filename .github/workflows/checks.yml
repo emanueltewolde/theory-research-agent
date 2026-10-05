@@ -1,0 +1,45 @@
+name: Template checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: '3.10'
+          - os: ubuntu-latest
+            python: '3.13'
+          - os: macos-latest
+            python: '3.11'
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      # Repository checkout is trusted external automation, not a research agent.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Filesystem-only tests and guard canaries
+        run: python3 -m unittest discover -s tests -v
+      - name: Validate the workspace
+        run: python3 tools/research.py check
+      - name: Check adapter consistency
+        run: |
+          python3 tools/research.py adapters --runtime codex --check
+          python3 tools/research.py adapters --runtime claude --check
