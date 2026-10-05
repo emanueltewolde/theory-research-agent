@@ -1,7 +1,7 @@
 # Long-Horizon Theoretical-CS Research Agent Template
 
 This repository is a text-first workspace for autonomous and human-supervised
-theoretical computer science research. It is designed for projects in areas
+theoretical research. It is designed for projects in areas
 such as algorithmic game theory, multiagent systems, reinforcement learning,
 AI, and mathematical optimization that may run for many sessions over weeks.
 
