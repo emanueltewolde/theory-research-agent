@@ -198,8 +198,8 @@ assertion, which must be flagged stale.
 The [writing guide](docs/MANUSCRIPT_WRITING.md) and user-filled
 [orientation](curated_manuscript/WRITING_ORIENTATION.md) are loaded for writing,
 not routine research. Use a writing session or an optional `writer` subagent;
-its normal report includes research implications. Detailed general writing
-principles remain to be discussed.
+its normal report includes research implications. The guide covers shared
+writing principles and the distinct purposes of main-body and appendix exposition.
 
 Build the overview with an existing TeX installation:
 
